@@ -1,0 +1,55 @@
+{
+  "version": "0.1",
+  "fecha": "2026-10-02",
+  "estado": "propuesta para revisión",
+  "colores": {
+    "fondo": "#FAF7F1",
+    "texto": "#23352B",
+    "secundario": "#59665C",
+    "verde": "#254C3B",
+    "suave": "#E3EBDD",
+    "borde": "#D6DDD2",
+    "blanco": "#FFFFFF",
+    "arcilla": "#EAC1AA",
+    "espera": "#F0E6D3",
+    "error": "#963A3B"
+  },
+  "tipografia": {
+    "titulos": "Georgia",
+    "interfaz": "Segoe UI",
+    "alternativa_interfaz": "Arial",
+    "cuerpo_px": 16,
+    "linea_cuerpo_px": 24
+  },
+  "espaciado_px": [
+    4,
+    8,
+    12,
+    16,
+    24,
+    32
+  ],
+  "marco": {
+    "ancho": 390,
+    "alto": 844,
+    "margen": 24
+  },
+  "componentes": {
+    "boton": {
+      "altura": 56,
+      "radio": 18
+    },
+    "ficha_cualidad": {
+      "altura": 80,
+      "radio": 18
+    },
+    "campo": {
+      "altura": 54,
+      "radio": 14
+    },
+    "etiqueta": {
+      "altura": 34,
+      "radio": 17
+    }
+  }
+}

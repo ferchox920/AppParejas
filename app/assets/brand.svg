@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="220" viewBox="95 230 200 220"><g id="Simbolo-botanico-neutral" transform="translate(195 314) scale(0.85)">
+    <ellipse cx="0" cy="94" rx="75" ry="9" fill="#E3EBDD"/>
+    <path d="M0 65 C-49 48 -51 7 -24 -35 C-8 -59 12 -68 24 -77 C61 -27 57 22 21 54 C14 60 6 64 0 65Z" fill="#EAC1AA"/>
+    <path d="M0 65 C-6 22 7 -21 24 -77" fill="none" stroke="#254C3B" stroke-width="3" stroke-linecap="round"/>
+    <path d="M3 12 C-45 8 -68 -18 -63 -52 C-25 -52 4 -32 3 12Z" fill="#254C3B"/>
+    <path d="M8 -7 C49 -13 66 -36 62 -64 C29 -61 9 -40 8 -7Z" fill="#78946F"/>
+    <path d="M-53 -42 L-2 4 M51 -53 L15 -15" fill="none" stroke="#FAF7F1" stroke-width="1.5" opacity=".65"/>
+    </g></svg>

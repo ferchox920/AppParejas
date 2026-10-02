@@ -1,0 +1,162 @@
+{
+  "version": "0.3",
+  "estado": "propuesta visual; pendiente de importación a Figma y revisión del usuario",
+  "fecha": "2026-10-02",
+  "colores": {
+    "fondo": "#FAF7F1",
+    "texto": "#23352B",
+    "secundario": "#59665C",
+    "verde": "#254C3B",
+    "suave": "#E3EBDD",
+    "borde": "#D6DDD2",
+    "blanco": "#FFFFFF",
+    "arcilla": "#EAC1AA",
+    "espera": "#F0E6D3",
+    "error": "#963A3B",
+    "foco": "#7B623C",
+    "advertencia": "#765321",
+    "error_fondo": "#F9ECE8",
+    "presionado": "#1C3B2C"
+  },
+  "tipografia": {
+    "titulos": "Lora",
+    "interfaz": "DM Sans",
+    "pesos": {
+      "titulos": 400,
+      "interfaz": [
+        400,
+        600
+      ]
+    },
+    "escala": [
+      {
+        "rol": "Identidad",
+        "familia": "Lora",
+        "tamano_px": 36,
+        "interlineado_px": 44,
+        "peso": 400
+      },
+      {
+        "rol": "Título",
+        "familia": "Lora",
+        "tamano_px": 31,
+        "interlineado_px": 40,
+        "peso": 400
+      },
+      {
+        "rol": "Subtítulo",
+        "familia": "Lora",
+        "tamano_px": 24,
+        "interlineado_px": 32,
+        "peso": 400
+      },
+      {
+        "rol": "Cuerpo",
+        "familia": "DM Sans",
+        "tamano_px": 16,
+        "interlineado_px": 24,
+        "peso": 400
+      },
+      {
+        "rol": "Acción",
+        "familia": "DM Sans",
+        "tamano_px": 16,
+        "interlineado_px": 24,
+        "peso": 600
+      },
+      {
+        "rol": "Ayuda",
+        "familia": "DM Sans",
+        "tamano_px": 14,
+        "interlineado_px": 20,
+        "peso": 400
+      },
+      {
+        "rol": "Metadato",
+        "familia": "DM Sans",
+        "tamano_px": 12,
+        "interlineado_px": 18,
+        "peso": 600
+      }
+    ]
+  },
+  "marco": {
+    "ancho": 390,
+    "alto": 844,
+    "margen": 24,
+    "area_tactil_minima": 48
+  },
+  "espaciado_px": [
+    4,
+    8,
+    12,
+    16,
+    24,
+    32,
+    48
+  ],
+  "carga": {
+    "indicador": "indeterminado",
+    "movimiento_reducido": "tres puntos estáticos y texto",
+    "demora_minima_artificial": false,
+    "progreso_porcentual": "sólo si es medible; no se muestra en esta propuesta"
+  },
+  "contrastes": [
+    {
+      "uso": "Texto principal",
+      "primer_plano": "#23352B",
+      "fondo": "#FAF7F1",
+      "ratio": 12.16,
+      "minimo": 4.5,
+      "cumple": true
+    },
+    {
+      "uso": "Texto secundario",
+      "primer_plano": "#59665C",
+      "fondo": "#FAF7F1",
+      "ratio": 5.64,
+      "minimo": 4.5,
+      "cumple": true
+    },
+    {
+      "uso": "Botón principal",
+      "primer_plano": "#FFFFFF",
+      "fondo": "#254C3B",
+      "ratio": 9.65,
+      "minimo": 4.5,
+      "cumple": true
+    },
+    {
+      "uso": "Error",
+      "primer_plano": "#963A3B",
+      "fondo": "#F9ECE8",
+      "ratio": 6.13,
+      "minimo": 4.5,
+      "cumple": true
+    },
+    {
+      "uso": "Aviso",
+      "primer_plano": "#765321",
+      "fondo": "#F0E6D3",
+      "ratio": 5.6,
+      "minimo": 4.5,
+      "cumple": true
+    },
+    {
+      "uso": "Borde de selección",
+      "primer_plano": "#254C3B",
+      "fondo": "#E3EBDD",
+      "ratio": 7.9,
+      "minimo": 3,
+      "cumple": true
+    },
+    {
+      "uso": "Foco visible",
+      "primer_plano": "#7B623C",
+      "fondo": "#FAF7F1",
+      "ratio": 5.37,
+      "minimo": 3,
+      "cumple": true
+    }
+  ]
+}

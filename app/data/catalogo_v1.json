@@ -1,0 +1,188 @@
+{
+  "catalog_version": 1,
+  "source": "Mapa del sistema de cualidades de AppParejas versión 1.0",
+  "families": [
+    {
+      "id": "afe",
+      "label": "Afecto"
+    },
+    {
+      "id": "sos",
+      "label": "Sostén"
+    },
+    {
+      "id": "con",
+      "label": "Conexión"
+    },
+    {
+      "id": "vit",
+      "label": "Vitalidad"
+    },
+    {
+      "id": "cui",
+      "label": "Cuidado"
+    }
+  ],
+  "qualities": [
+    {
+      "id": "afe_carino",
+      "family_id": "afe",
+      "label": "Cariño",
+      "definition": "expresar aprecio de una manera que la otra persona pueda recibir y elegir.",
+      "example": "decir algo que valoramos del otro o proponer un gesto afectuoso con su consentimiento.",
+      "visual_effect": "motivo de curvas cálidas sobre la cubierta; reaparece como pequeñas curvas en la superficie de las hojas. Cambia el dibujo, no el tamaño o la salud del brote."
+    },
+    {
+      "id": "afe_ternura",
+      "family_id": "afe",
+      "label": "Ternura",
+      "definition": "acercarse con delicadeza, considerando cómo está la otra persona y qué contacto o palabras le resultan cómodos.",
+      "example": "preguntar si necesita compañía o un momento de calma.",
+      "visual_effect": "textura de puntos suaves en la cubierta; en el brote se repite en la superficie de hojas. No exige contacto físico ni implica fragilidad."
+    },
+    {
+      "id": "afe_calidez",
+      "family_id": "afe",
+      "label": "Calidez",
+      "definition": "crear un trato acogedor en el que resulte posible acercarse.",
+      "example": "recibir al otro con atención o preparar un momento agradable para conversar.",
+      "visual_effect": "matiz cálido del relleno de la cubierta; el mismo matiz tiñe la hoja. Se conserva el contraste de la ilustración y la cualidad sigue identificándose por su etiqueta."
+    },
+    {
+      "id": "afe_amabilidad",
+      "family_id": "afe",
+      "label": "Amabilidad",
+      "definition": "cuidar el modo de dirigirse al otro, incluso al expresar una necesidad o un límite.",
+      "example": "pedir un cambio con claridad sin descalificar.",
+      "visual_effect": "bordes suavizados del motivo exterior y redondeo de bordes foliares. No elimina los contornos firmes vinculados con otras cualidades."
+    },
+    {
+      "id": "sos_respeto",
+      "family_id": "sos",
+      "label": "Respeto",
+      "definition": "reconocer autonomía, límites y decisiones de la otra persona.",
+      "example": "aceptar que puede no querer participar en una actividad.",
+      "visual_effect": "contorno doble limpio en la cubierta; reaparece como un borde definido del tallo. Simboliza límites legibles, no superioridad ni rigidez."
+    },
+    {
+      "id": "sos_paciencia",
+      "family_id": "sos",
+      "label": "Paciencia",
+      "definition": "dar tiempo para responder, aprender o encontrar un ritmo posible.",
+      "example": "acordar cuándo retomar una conversación sin exigir una respuesta inmediata.",
+      "visual_effect": "bandas espaciadas alrededor de la cubierta; el tallo conserva un ritmo de segmentos. No modifica los 7 días del primer brote ni impone espera al otro."
+    },
+    {
+      "id": "sos_compromiso",
+      "family_id": "sos",
+      "label": "Compromiso",
+      "definition": "participar en acuerdos elegidos libremente y revisar cómo sostenerlos.",
+      "example": "organizar juntos un plan y avisar cuando necesita cambiar.",
+      "visual_effect": "nervadura longitudinal en la cubierta; reaparece como línea central del tallo. Es un motivo, no un tallo que resiste más que otros."
+    },
+    {
+      "id": "sos_estabilidad",
+      "family_id": "sos",
+      "label": "Estabilidad",
+      "definition": "construir referencias y rutinas previsibles que admitan ajustes.",
+      "example": "acordar un momento habitual para conversar y poder reprogramarlo.",
+      "visual_effect": "base ovalada y encuadre equilibrado; al brotar mantiene la composición centrada. La inclinación decorativa de otras cualidades permanece dentro de ese encuadre."
+    },
+    {
+      "id": "con_escucha",
+      "family_id": "con",
+      "label": "Escucha",
+      "definition": "atender lo que el otro quiere comunicar y comprobar cómo lo entendimos.",
+      "example": "preguntar si necesita ser escuchado o si busca ideas.",
+      "visual_effect": "arco abierto en el núcleo; se continúa en apertura lateral de hojas. La apertura es gráfica y no mide disponibilidad emocional."
+    },
+    {
+      "id": "con_intimidad",
+      "family_id": "con",
+      "label": "Intimidad",
+      "definition": "compartir cercanía y aspectos personales dentro de límites consentidos. Puede ser emocional, cotidiana o física; no exige sexualidad.",
+      "example": "",
+      "visual_effect": "envoltura interna alrededor del núcleo; en el brote se conserva como pliegue central de la hoja. Protege visualmente sin cerrar el arco de escucha."
+    },
+    {
+      "id": "con_honestidad",
+      "family_id": "con",
+      "label": "Honestidad",
+      "definition": "expresar necesidades e información propia con claridad, cuidando la privacidad y el momento.",
+      "example": "decir que un plan no resulta posible y proponer revisarlo.",
+      "visual_effect": "línea continua nítida en el núcleo; reaparece como vena central en hojas. No cambia la transparencia de datos ni representa acceso irrestricto al otro."
+    },
+    {
+      "id": "con_confianza",
+      "family_id": "con",
+      "label": "Confianza",
+      "definition": "cultivar previsibilidad y condiciones para confiar, sin exigir acceso a dispositivos, ubicación o pensamientos.",
+      "example": "acordar cómo avisar cambios de planes.",
+      "visual_effect": "centro geométrico con anillos concéntricos; en la planta queda como motivo circular en la unión entre tallo y hojas. Todos los núcleos mantienen igual integridad visual."
+    },
+    {
+      "id": "vit_juego",
+      "family_id": "vit",
+      "label": "Juego",
+      "definition": "abrir espacio a experiencias ligeras y compartidas.",
+      "example": "inventar una consigna divertida que ambos quieran probar.",
+      "visual_effect": "pequeñas motas de formas variadas sobre la cubierta; reaparecen como acentos en hojas. Se dibujan en posiciones fijas para evitar depender del orden de elección."
+    },
+    {
+      "id": "vit_humor",
+      "family_id": "vit",
+      "label": "Humor",
+      "definition": "compartir aquello que les divierte sin burlarse de límites o vulnerabilidades.",
+      "example": "recordar una anécdota que ambos disfruten.",
+      "visual_effect": "pares de pequeñas curvas en la cubierta; se conservan como detalles pareados en hojas. No se dibuja una “cara feliz” como indicador del vínculo."
+    },
+    {
+      "id": "vit_sorpresa",
+      "family_id": "vit",
+      "label": "Sorpresa",
+      "definition": "introducir novedades compatibles con gustos y límites conocidos.",
+      "example": "elegir un plan nuevo dentro de un rango de costo ya acordado.",
+      "visual_effect": "una pequeña marca estrellada en un sector reservado; reaparece como acento en una hoja. La marca no activa animaciones o cambios inesperados de interfaz."
+    },
+    {
+      "id": "vit_aventura",
+      "family_id": "vit",
+      "label": "Aventura",
+      "definition": "explorar juntos algo nuevo en una escala cómoda para ambos.",
+      "example": "conocer un lugar cercano o intentar una actividad en casa.",
+      "visual_effect": "trazo diagonal de exploración en la cubierta; el brote puede tener una leve inclinación decorativa. Permanece estable y no cambia su velocidad de crecimiento."
+    },
+    {
+      "id": "cui_apoyo",
+      "family_id": "cui",
+      "label": "Apoyo",
+      "definition": "acompañar según lo que la otra persona necesita y acepta.",
+      "example": "preguntar si ayuda más escuchar, colaborar o dar espacio.",
+      "visual_effect": "líneas laterales del halo inferior; reaparecen como ramificaciones laterales de las raíces. No aumenta la resistencia ni asigna a alguien el rol permanente de cuidador."
+    },
+    {
+      "id": "cui_atencion",
+      "family_id": "cui",
+      "label": "Atención",
+      "definition": "notar y recordar detalles que la otra persona decide compartir.",
+      "example": "reservar un momento sin distracciones para conversar.",
+      "visual_effect": "pequeños puntos en el halo inferior; se mantienen como nodos en raíces. No se interpreta atención como monitoreo de conexión o disponibilidad permanente."
+    },
+    {
+      "id": "cui_responsabilidad",
+      "family_id": "cui",
+      "label": "Responsabilidad",
+      "definition": "hacerse cargo de acuerdos concretos y conversar cómo repartirlos.",
+      "example": "revisar tareas compartidas según tiempo y capacidad disponible.",
+      "visual_effect": "segmentos ordenados en el halo inferior; reaparecen como líneas paralelas de raíces. La regularidad es ornamental; no indica que una persona “cumple más”."
+    },
+    {
+      "id": "cui_gratitud",
+      "family_id": "cui",
+      "label": "Gratitud",
+      "definition": "reconocer algo que se valoró, sin exigir devolución ni agradecimiento por obligaciones básicas.",
+      "example": "expresar qué gesto nos hizo sentir acompañados.",
+      "visual_effect": "pequeños anillos en el halo inferior; se convierten en anillos de raíz en la vista simbólica. No aparecen como medallas o puntuación."
+    }
+  ]
+}

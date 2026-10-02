@@ -1,0 +1,31 @@
+# Referencias sincronizadas y configuración del espejo de ChatGPT
+/sources/
+/AGENTS.md
+
+# Herramientas locales y archivos de verificación
+/.tools/
+/.artifacts/
+/.playwright-mcp/
+**/_revision/
+**/__pycache__/
+*.pyc
+
+# Cachés de Godot y exportaciones locales
+**/.godot/
+/build/
+/exports/
+
+# Configuración y claves privadas
+.env
+.env.*
+!.env.example
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
+export_credentials.cfg
+
+# Archivos temporales de oficina y del sistema
+~$*
+Thumbs.db
+.DS_Store
