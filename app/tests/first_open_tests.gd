@@ -187,10 +187,15 @@ func _run() -> void:
 	timeout.queue_free()
 	await process_frame
 	await _layout_tests()
+	await _android_back_tests()
 	print("PRIMERA APERTURA: %d verificaciones, %d fallos" % [checks, failures.size()])
 	quit(0 if failures.is_empty() else 1)
 
 func _layout_tests() -> void:
+	check(ProjectSettings.get_setting("display/window/stretch/aspect") == "expand", "Pantalla se expande sin bandas por proporción fija")
+	check(ScreenLayout.safe_insets(Rect2(0, 90, 1080, 2210), Rect2(0, 0, 1080, 2340), Vector2(390, 845)) == Vector4i(0, 33, 0, 15), "Área segura convierte píxeles físicos a márgenes lógicos")
+	check(ScreenLayout.safe_insets(Rect2(0, 90, 1080, 2210), Rect2(0, 90, 1080, 2210), Vector2(390, 844)) == Vector4i.ZERO, "Área segura no duplica barras si Android ya las excluye")
+	check(ScreenLayout.safe_insets(Rect2(), Rect2(0, 0, 1080, 2340), Vector2(390, 844)) == Vector4i.ZERO, "Área segura ausente conserva márgenes de diseño")
 	var app: Control = load("res://scenes/main.tscn").instantiate()
 	app.auto_start = false
 	app.first_open.store = FirstOpenStore.new(base + "ui.json")
@@ -217,6 +222,44 @@ func _layout_tests() -> void:
 					check(app.find_child("AcceptInvitation", true, false) != null, "Aceptación visible y explícita")
 				if screen_name == "error":
 					check(app.find_child("CameraSettings", true, false) != null and app.find_child("UsePIN", true, false) != null, "Permiso denegado ofrece ajustes y PIN")
+	app.queue_free()
+	await process_frame
+
+func _android_back_tests() -> void:
+	check(not ProjectSettings.get_setting("application/config/quit_on_go_back", true), "Android no cierra automáticamente al volver")
+	var app: Control = load("res://scenes/main.tscn").instantiate()
+	app.auto_start = false
+	app.first_open.store = FirstOpenStore.new(base + "back.json")
+	root.add_child(app)
+	check(not quit_on_go_back, "Escena desactiva cierre por gesto del sistema")
+	for route: Array in [["selection", "garden"], ["scan", "join"], ["invite", "connect"], ["waiting", "connect"], ["welcome", "welcome"], ["garden", "garden"], ["loading", "loading"]]:
+		app.show_screen(route[0])
+		root.propagate_notification(Node.NOTIFICATION_WM_GO_BACK_REQUEST)
+		await process_frame
+		check(app.screen == route[1], "Volver del sistema: %s → %s" % route)
+	app.first_open.state.invitation.action = "join"
+	app.show_screen("access")
+	root.propagate_notification(Node.NOTIFICATION_WM_GO_BACK_REQUEST)
+	await process_frame
+	check(app.screen == "join", "Volver desde acceso conserva ruta de invitación")
+	app.first_open.state.invitation.pending_reference = "123456"
+	app.show_screen("review")
+	root.propagate_notification(Node.NOTIFICATION_WM_GO_BACK_REQUEST)
+	await process_frame
+	check(app.screen == "connect" and app.first_open.state.invitation.pending_reference.is_empty() and not app.first_open.state.has_pair(), "Volver desde revisión descarta referencia sin aceptar vínculo")
+	app.first_open.intro_step = 1
+	app.show_screen("intro")
+	root.propagate_notification(Node.NOTIFICATION_WM_GO_BACK_REQUEST)
+	await process_frame
+	check(app.screen == "intro" and app.first_open.intro_step == 0, "Gesto vuelve al paso anterior de introducción")
+	root.propagate_notification(Node.NOTIFICATION_WM_GO_BACK_REQUEST)
+	await process_frame
+	check(app.screen == "welcome", "Gesto sale de introducción hacia bienvenida")
+	app.show_screen("access")
+	app.first_open.busy = true
+	root.propagate_notification(Node.NOTIFICATION_WM_GO_BACK_REQUEST)
+	await process_frame
+	check(app.screen == "access", "Volver durante operación pendiente conserva pantalla")
 	app.queue_free()
 	await process_frame
 

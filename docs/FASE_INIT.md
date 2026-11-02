@@ -2,6 +2,8 @@
 
 Actualización del 2 de octubre de 2026.
 
+Actualización de cuentas: Supabase Auth por código y el vínculo bilateral ya se verificaron con dos cuentas reales en Samsung y escritorio. Ambos clientes muestran la confirmación. La recuperación tras volver a acceder y TalkBack siguen pendientes. Ver [cuentas y validación](CUENTAS_Y_VALIDACION.md) para el estado actual; las referencias a backend pendiente más abajo pertenecen al registro original.
+
 Actualización de primera apertura: el recorrido persistente de bienvenida, introducción, acceso e invitaciones de demostración está implementado e integrado con las cualidades y el jardín. Compartir abre Android y la cámara contempla permiso denegado. El backend, el lector de QR y los enlaces públicos siguen pendientes. Ver [primera apertura](PRIMERA_APERTURA.md) para el estado vigente, pruebas y contratos de integración; el registro original de tres vistas se conserva debajo.
 
 Actualización Android: se recuperó esta base en `D:/PersonalProyect/AppParejas`, se configuraron las plantillas 4.7.2 y se generó un APK de depuración. Se verificaron instalación, bienvenida, navegación al jardín y pantalla de cualidades con texto aumentado en el teléfono Samsung SM-S936U1 con Android 16. El emulador se cerró y las próximas pruebas usan el teléfono. Siguen pendientes mediciones de rendimiento y accesibilidad. Ver [la guía Android](ANDROID.md). Las secciones siguientes conservan el registro de la inicialización original.

@@ -17,10 +17,39 @@ var first_open := FirstOpenFlow.new()
 var platform := PlatformCapabilities.new()
 var auto_start: bool = true
 var _queued_reference: String = ""
+var _margin: MarginContainer
+var _scroll: ScrollContainer
+var _keyboard_height: int = 0
+
+func _process(_delta: float) -> void:
+	if OS.get_name() != "Android": return
+	var height := DisplayServer.virtual_keyboard_get_height()
+	if height == _keyboard_height: return
+	_keyboard_height = height
+	_update_safe_area()
+	_reveal_focused_field.call_deferred()
+
+func _reveal_focused_field() -> void:
+	if not is_instance_valid(_scroll): return
+	var focused := get_viewport().gui_get_focus_owner()
+	if is_instance_valid(focused) and _scroll.is_ancestor_of(focused):
+		_scroll.ensure_control_visible(focused)
 
 func _ready() -> void:
+	# Android envía la misma solicitud al usar el gesto o el botón del sistema.
+	get_tree().quit_on_go_back = false
+	get_tree().auto_accept_quit = false
+	get_viewport().size_changed.connect(_update_safe_area)
 	theme = AppTheme.create()
 	catalog = QualityCatalog.load_catalog()
+	if auto_start:
+		var connection := BackendConfig.load_settings()
+		if connection.mode != "demo":
+			var remote := SupabaseInvitationService.new()
+			remote.base_url = str(connection.get("url", ""))
+			remote.public_key = str(connection.get("public_key", ""))
+			first_open.service = remote
+			first_open.store = AccountPreferencesStore.new()
 	add_child(first_open)
 	add_child(platform)
 	first_open.changed.connect(_flow_changed)
@@ -38,7 +67,6 @@ func _ready() -> void:
 	)
 	_render()
 	if auto_start: first_open.start()
-	get_tree().auto_accept_quit = false
 
 func _flow_changed() -> void:
 	screen = first_open.screen
@@ -61,13 +89,42 @@ func _flow_changed() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST: get_tree().quit()
 	if what == NOTIFICATION_APPLICATION_RESUMED and is_instance_valid(platform):
+		_update_safe_area.call_deferred()
 		platform.read_launch_invitation.call_deferred()
 		if first_open.screen == "waiting" and not first_open.busy: first_open.refresh()
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST and is_instance_valid(first_open):
-		platform.cancel_scan()
-		if first_open.screen == "review": first_open.decline()
-		elif screen in ["garden", "selection"]: show_screen("garden")
-		elif not first_open.busy: first_open.navigate("connect")
+		# Esperar a que termine la propagación antes de reconstruir la interfaz.
+		_go_back.call_deferred()
+
+func _go_back() -> void:
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused is LineEdit or focused is TextEdit:
+		DisplayServer.virtual_keyboard_hide()
+		get_viewport().gui_release_focus()
+		return
+	if first_open.busy or screen == "loading": return
+	platform.cancel_scan()
+	match screen:
+		"welcome", "garden": pass
+		"confirmed":
+			if first_open.is_demo(): first_open.navigate("connect")
+		"selection": show_screen("garden")
+		"scan": first_open.navigate("join")
+		"access": first_open.navigate("join" if first_open.state.invitation.action == "join" else "connect")
+		"verify": first_open.navigate("access")
+		"review", "join": first_open.decline()
+		"intro":
+			if first_open.intro_step > 0:
+				first_open.intro_step -= 1
+				first_open.navigate("intro")
+			else:
+				first_open.navigate("welcome" if first_open.state.introduction == "new" else "connect")
+		"connect":
+			if first_open.state.has_pair():
+				first_open.navigate("garden" if first_open.is_demo() else "confirmed")
+			else: first_open.navigate("welcome")
+		"error": first_open.return_from_error()
+		_: first_open.navigate("connect")
 
 func show_screen(next_screen: String) -> void:
 	screen = next_screen
@@ -92,12 +149,17 @@ func _render() -> void:
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(background)
 	var margin := MarginContainer.new()
+	_margin = margin
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for edge: String in ["left", "right", "top", "bottom"]:
 		margin.add_theme_constant_override("margin_" + edge, 24)
 	add_child(margin)
+	_update_safe_area()
 	var scroll := ScrollContainer.new()
+	_scroll = scroll
+	scroll.follow_focus = true
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 	margin.add_child(scroll)
 	_body = VBoxContainer.new()
 	_body.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -120,28 +182,44 @@ func _render() -> void:
 	# Evitar que el foco o un click perteneciente a una pantalla eliminada se reutilice.
 	get_viewport().gui_release_focus()
 
+func _update_safe_area() -> void:
+	if not is_instance_valid(_margin): return
+	var insets := Vector4i.ZERO
+	if OS.get_name() == "Android":
+		var window := Rect2(Vector2(DisplayServer.window_get_position()), Vector2(DisplayServer.window_get_size()))
+		insets = ScreenLayout.safe_insets(Rect2(DisplayServer.get_display_safe_area()), window, get_viewport_rect().size)
+	_margin.add_theme_constant_override("margin_left", 24 + insets.x)
+	_margin.add_theme_constant_override("margin_top", 24 + insets.y)
+	_margin.add_theme_constant_override("margin_right", 24 + insets.z)
+	var keyboard_inset := 0
+	if OS.get_name() == "Android" and DisplayServer.window_get_size().y > 0:
+		keyboard_inset = ceili(_keyboard_height * get_viewport_rect().size.y / DisplayServer.window_get_size().y)
+	_margin.add_theme_constant_override("margin_bottom", 24 + maxi(insets.w, keyboard_inset))
+
+func _garden_controls() -> BoxContainer:
+	# Con texto aumentado, las acciones se apilan para conservar el ancho táctil.
+	var row: BoxContainer = VBoxContainer.new() if text_scale > 1.0 else HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	_body.add_child(row)
+	return row
+
 func _garden_screen() -> void:
 	_title("Alba")
 	_label("Dos elecciones de ejemplo, una forma compartida.")
-	var stage_row := HBoxContainer.new()
-	stage_row.add_theme_constant_override("separation", 8)
-	_body.add_child(stage_row)
+	var stage_row := _garden_controls()
 	_button("Semilla", func() -> void: set_stage("seed"), stage_row)
 	_button("Primer brote", func() -> void: set_stage("sprout"), stage_row)
 	_add_garden()
-	var turn_row := HBoxContainer.new()
-	turn_row.add_theme_constant_override("separation", 8)
-	_body.add_child(turn_row)
+	var turn_row := _garden_controls()
 	_button("Girar ←", func() -> void: garden.turn(-15), turn_row)
 	_button("Girar →", func() -> void: garden.turn(15), turn_row)
-	var zoom_row := HBoxContainer.new()
-	zoom_row.add_theme_constant_override("separation", 8)
-	_body.add_child(zoom_row)
+	var zoom_row := _garden_controls()
 	_button("Acercar +", func() -> void: garden.zoom(-0.25), zoom_row)
 	_button("Alejar −", func() -> void: garden.zoom(0.25), zoom_row)
 	_button("Restablecer cámara", func() -> void: garden.reset_camera())
 	var motion := CheckBox.new()
 	motion.text = "Movimiento reducido"
+	motion.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	motion.custom_minimum_size.y = 48
 	motion.button_pressed = reduced_motion
 	motion.toggled.connect(func(enabled: bool) -> void:
@@ -150,9 +228,7 @@ func _garden_screen() -> void:
 		first_open.save_preferences(text_scale, enabled)
 	)
 	_body.add_child(motion)
-	var text_row := HBoxContainer.new()
-	text_row.add_theme_constant_override("separation", 8)
-	_body.add_child(text_row)
+	var text_row := _garden_controls()
 	_button("Texto normal", func() -> void: _set_text_scale(1.0), text_row)
 	_button("Texto grande", func() -> void: _set_text_scale(1.5), text_row)
 	_label("Lo que eligieron cultivar", 20, AppTheme.FOREST)

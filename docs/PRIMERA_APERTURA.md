@@ -1,5 +1,7 @@
 # Primera apertura implementada
 
+Esta guía describe el proveedor de demostración. El proveedor real de Supabase también está implementado; consultar [cuentas y validación del MVP](CUENTAS_Y_VALIDACION.md). Las secciones de cuentas pendientes de esta guía conservan el contrato original.
+
 Implementación del 2 de octubre de 2026 sobre Godot 4.7.2, GDScript y Compatibility. Conserva la escena principal, el catálogo, el selector y el jardín existentes. Se revisaron README, decisiones, escenas y las guías de primera apertura e identidad antes de modificar la aplicación.
 
 ## Alcance disponible

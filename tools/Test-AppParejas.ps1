@@ -26,3 +26,10 @@ $openingLog | Write-Output
 if ($openingExit -ne 0 -or ($openingLog -match 'SCRIPT ERROR:|ERROR:')) {
     throw 'Fallaron las verificaciones de primera apertura.'
 }
+$accountLog = & $engine --headless --path $appRoot --script res://tests/account_connection_tests.gd 2>&1
+$accountExit = $LASTEXITCODE
+$accountLog | Set-Content -LiteralPath (Join-Path $artifactRoot 'account-tests.log') -Encoding utf8
+$accountLog | Write-Output
+if ($accountExit -ne 0 -or ($accountLog -match 'SCRIPT ERROR:|ERROR:')) {
+    throw 'Fallaron las verificaciones de cuentas.'
+}

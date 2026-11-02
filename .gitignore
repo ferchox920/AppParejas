@@ -24,6 +24,9 @@
 *.p12
 *.mobileprovision
 export_credentials.cfg
+/app/data/connection.local.json
+/backend/supabase/.temp/
+/backend/supabase/.branches/
 
 # Archivos temporales de oficina y del sistema
 ~$*

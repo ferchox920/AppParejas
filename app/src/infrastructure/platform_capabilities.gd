@@ -8,6 +8,7 @@ var _scanning: bool = false
 var _last_intent: String = ""
 
 func _ready() -> void:
+	_style_system_bars()
 	get_tree().on_request_permissions_result.connect(_permission_result)
 	if Engine.has_singleton("AppParejasPlatform"):
 		var bridge := Engine.get_singleton("AppParejasPlatform")
@@ -24,6 +25,19 @@ func _ready() -> void:
 				scan_finished.emit({"ok": false, "error": code})
 			)
 
+func _style_system_bars() -> void:
+	if not Engine.has_singleton("AndroidRuntime"): return
+	var version := JavaClassWrapper.wrap("android.os.Build$VERSION")
+	if version.SDK_INT < 30: return
+	var runtime := Engine.get_singleton("AndroidRuntime")
+	var activity: JavaObject = runtime.getActivity()
+	activity.runOnUiThread(runtime.createRunnableFromGodotCallable(func() -> void:
+		var controller: JavaObject = activity.getWindow().getInsetsController()
+		if controller != null:
+			# APPEARANCE_LIGHT_STATUS_BARS | APPEARANCE_LIGHT_NAVIGATION_BARS.
+			controller.setSystemBarsAppearance(24, 24)
+	))
+
 func copy_text(value: String) -> bool:
 	if not DisplayServer.has_feature(DisplayServer.FEATURE_CLIPBOARD): return false
 	DisplayServer.clipboard_set(value)
@@ -39,7 +53,7 @@ func share_text(value: String) -> bool:
 	send.setAction("android.intent.action.SEND")
 	send.setType("text/plain")
 	send.putExtra("android.intent.extra.TEXT", value)
-	var chooser: JavaObject = intent_class.createChooser(send, "Compartir invitación de demostración")
+	var chooser: JavaObject = intent_class.createChooser(send, "Compartir invitación")
 	if JavaClassWrapper.get_exception() != null: return false
 	activity.runOnUiThread(runtime.createRunnableFromGodotCallable(func() -> void:
 		activity.startActivity(chooser)

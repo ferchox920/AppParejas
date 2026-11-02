@@ -13,7 +13,7 @@ func has_session() -> bool:
 	return not str(session.get("id", "")).is_empty()
 
 func has_pair() -> bool:
-	return pair.get("status", "") == "confirmed" and pair.get("demo", false) == true
+	return pair.get("status", "") == "confirmed" and not str(pair.get("id", "")).is_empty()
 
 func route() -> String:
 	if not str(invitation.get("pending_reference", "")).is_empty():
@@ -65,7 +65,7 @@ static func parse(data: Dictionary) -> FirstOpenState:
 		return null
 	if not result.preferences.get("reduced_motion") is bool:
 		return null
-	result.preferences.text_scale = clampf(float(result.preferences.text_scale), 1.0, 1.5)
+	result.preferences.text_scale = clampf(float(result.preferences.text_scale), 1.0, 2.0)
 	for id: Variant in data.selection:
 		if not id is String or result.selection.size() >= 5:
 			return null

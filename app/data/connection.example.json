@@ -1,0 +1,5 @@
+{
+  "mode": "supabase",
+  "url": "https://PROJECT_REF.supabase.co",
+  "public_key": "sb_publishable_REPLACE_ME"
+}

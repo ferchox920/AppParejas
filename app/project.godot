@@ -3,9 +3,16 @@ config_version=5
 
 [application]
 config/name="AppParejas"
+config/quit_on_go_back=false
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://assets/icon.svg"
+boot_splash/image="res://assets/boot_splash.png"
+boot_splash/bg_color=Color(0.9804, 0.9686, 0.9451, 1)
+boot_splash/show_image=true
+boot_splash/fullsize=true
+boot_splash/use_filter=true
+boot_splash/minimum_display_time=0
 
 [display]
 window/size/viewport_width=390
@@ -13,6 +20,7 @@ window/size/viewport_height=844
 window/size/window_width_override=390
 window/size/window_height_override=844
 window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 window/handheld/orientation=1
 
 [rendering]

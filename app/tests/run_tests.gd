@@ -101,6 +101,19 @@ func _run() -> void:
 	app.show_screen("garden")
 	await process_frame
 	_check(app.stage == "sprout" and app.garden.stage == "sprout", "El brote se conserva al regresar")
+	for width: int in [360, 390]:
+		root.size = Vector2i(width, 844)
+		root.content_scale_size = Vector2i(width, 844)
+		app._set_text_scale(2.0)
+		await process_frame
+		await process_frame
+		var within_width: bool = app._body.size.x <= width - 48 + 1
+		for row: Node in app._body.get_children():
+			if row is BoxContainer:
+				for control: Node in row.get_children():
+					if control is Button:
+						within_width = within_width and control.get_global_rect().end.x <= width - 24 + 1
+		_check(within_width, "Acciones del jardín sin desborde al 200%% en %d px" % width)
 	app.queue_free()
 	await process_frame
 	print("RESULTADO: %d verificaciones, %d fallos" % [checks, failures.size()])
