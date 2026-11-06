@@ -15,6 +15,9 @@ var _operation_ids: Dictionary = {}
 var _pending_email: String = ""
 var _pending_name: String = ""
 var _pending_consent: bool = false
+var _session_store: AndroidSessionStore
+var _restore_attempted := false
+var _profile_registered := false
 
 func _init() -> void:
 	is_demo = false
@@ -28,6 +31,12 @@ func cancel_pending() -> void:
 
 func request(operation: String, payload: Dictionary, request_id: int) -> void:
 	cancel_pending()
+	if operation == "bootstrap" and not _restore_attempted:
+		_restore_attempted = true
+		if Engine.has_singleton("AndroidRuntime") and base_url.begins_with("https://") and not public_key.is_empty():
+			_session_store = AndroidSessionStore.new(base_url)
+			_refresh_token = _session_store.read_token()
+			_profile_registered = not _refresh_token.is_empty()
 	_execute(operation, payload.duplicate(true), request_id, _generation)
 
 func _execute(operation: String, payload: Dictionary, request_id: int, generation: int) -> void:
@@ -51,26 +60,32 @@ func _execute(operation: String, payload: Dictionary, request_id: int, generatio
 			result = {"ok": false, "error": "auth"}
 		else:
 			var verification := verification_payload(str(payload.get("code", "")))
+			var retry_profile := not _access_token.is_empty() and not _profile_registered
 			if verification.is_empty():
 				result = {"ok": false, "error": "invalid_code"}
-			elif not _access_token.is_empty():
+			elif retry_profile:
 				# Recuperar un perfil cuya respuesta se perdió sin consumir otra vez el enlace.
 				result = {"ok": true, "data": {}}
 			else:
 				result = await _send("/auth/v1/verify", verification, false)
 			if result.ok and generation == _generation:
-				if not _access_token.is_empty() or _set_session(result.data):
+				if retry_profile or _set_session(result.data):
+					if _profile_registered:
+						_profile_registered = false
+						if _session_store != null: _session_store.clear()
 					result = await _rpc("register_profile", {"p_name": _pending_name, "p_consent": _pending_consent})
-					if result.ok:
+					if result.ok and generation == _generation:
+						_profile_registered = true
+						_persist_refresh_token()
 						_session.name = _pending_name
 						result = {"ok": true, "session": _session.duplicate()}
 				else: result = {"ok": false, "error": "auth"}
 	elif operation == "logout":
-		if not _access_token.is_empty(): await _send("/auth/v1/logout?scope=local", {}, true)
-		if generation != _generation: return
-		_clear_session()
-		result = {"ok": true}
-	elif operation == "bootstrap" and _access_token.is_empty():
+		var access_token := _access_token
+		var cleared := _clear_session()
+		if not access_token.is_empty(): await _send("/auth/v1/logout?scope=local", {}, false, access_token)
+		result = {"ok": true} if cleared else {"ok": false, "error": "session_storage"}
+	elif operation == "bootstrap" and _refresh_token.is_empty():
 		result = {"ok": true}
 	elif operation in ["bootstrap", "status", "create", "resolve", "accept", "cancel"]:
 		result = await _ensure_session()
@@ -124,12 +139,13 @@ func _operation_id(key: String) -> String:
 
 func _ensure_session() -> Dictionary:
 	var generation := _generation
-	if _access_token.is_empty(): return {"ok": false, "error": "auth"}
-	if Time.get_unix_time_from_system() < _expires_at - 60.0: return {"ok": true}
+	if _refresh_token.is_empty(): return {"ok": false, "error": "auth"}
+	if not _access_token.is_empty() and Time.get_unix_time_from_system() < _expires_at - 60.0: return {"ok": true}
 	var response := await _send("/auth/v1/token?grant_type=refresh_token", {"refresh_token": _refresh_token}, false)
 	if generation != _generation: return {"ok": false, "error": "cancelled"}
 	if not response.ok: return response
-	if not _set_session(response.data): return {"ok": false, "error": "auth"}
+	if not _set_session(response.data): return {"ok": false, "error": "unavailable"}
+	_persist_refresh_token()
 	return {"ok": true}
 
 func _set_session(data: Variant) -> bool:
@@ -145,7 +161,14 @@ func _set_session(data: Variant) -> bool:
 	_session = {"id": str(data.user.get("id", "")), "name": _pending_name, "demo": false}
 	return not str(_session.id).is_empty()
 
-func _clear_session() -> void:
+func _persist_refresh_token() -> void:
+	if _session_store != null and _profile_registered and not _session_store.write_token(_refresh_token):
+		_session_store.clear()
+		push_warning("No se pudo guardar la sesión segura de Android.")
+
+func _clear_session() -> bool:
+	_restore_attempted = true
+	_profile_registered = false
 	_access_token = ""
 	_refresh_token = ""
 	_expires_at = 0.0
@@ -156,15 +179,17 @@ func _clear_session() -> void:
 	_pending_email = ""
 	_pending_name = ""
 	_pending_consent = false
+	return _session_store == null or _session_store.clear()
 
 func _rpc(operation: String, body: Dictionary) -> Dictionary:
 	var response := await _send("/rest/v1/rpc/" + operation, body, true)
 	if not response.ok: return response
 	if not response.data is Dictionary or not response.data.get("ok") is bool:
 		return {"ok": false, "error": "unavailable"}
+	if not response.data.ok and response.data.get("error") == "auth": _clear_session()
 	return response.data
 
-func _send(path: String, body: Dictionary, authenticated: bool) -> Dictionary:
+func _send(path: String, body: Dictionary, authenticated: bool, logout_token: String = "") -> Dictionary:
 	var generation := _generation
 	var http := HTTPRequest.new()
 	_http = http
@@ -174,6 +199,7 @@ func _send(path: String, body: Dictionary, authenticated: bool) -> Dictionary:
 	add_child(http)
 	var headers := PackedStringArray(["Content-Type: application/json", "apikey: " + public_key])
 	if authenticated: headers.append("Authorization: Bearer " + _access_token)
+	if not logout_token.is_empty(): headers.append("Authorization: Bearer " + logout_token)
 	var error := http.request(base_url + path, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
 	if error != OK:
 		http.queue_free()
@@ -189,10 +215,14 @@ func _send(path: String, body: Dictionary, authenticated: bool) -> Dictionary:
 	if status < 200 or status >= 300:
 		if status == 429: return {"ok": false, "error": "rate_limited"}
 		if path.begins_with("/auth/v1/verify") and status in [400, 401, 403, 422]: return {"ok": false, "error": "invalid_code"}
-		if path.begins_with("/auth/v1/token") and status in [400, 401, 403]:
+		var code := str(data.get("error_code", "")) if data is Dictionary else ""
+		if path.begins_with("/auth/v1/token") and status < 500 and code in [
+			"refresh_token_not_found", "refresh_token_already_used", "session_not_found",
+			"session_expired", "user_not_found", "user_banned"
+		]:
 			_clear_session()
 			return {"ok": false, "error": "auth"}
-		if status == 401 or status == 403:
+		if authenticated and status in [401, 403]:
 			_clear_session()
 			return {"ok": false, "error": "auth"}
 		return {"ok": false, "error": "unavailable"}

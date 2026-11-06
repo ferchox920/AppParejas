@@ -16,8 +16,7 @@ func _ready() -> void:
 			bridge.connect("invitation_received", func(value: String) -> void: invitation_received.emit(value))
 		if bridge.has_signal("qr_scanned"):
 			bridge.connect("qr_scanned", func(value: String) -> void:
-				_scanning = false
-				scan_finished.emit({"ok": true, "reference": value})
+				_finish_scan({"ok": true, "reference": value})
 			)
 		if bridge.has_signal("scan_failed"):
 			bridge.connect("scan_failed", func(code: String) -> void:

@@ -6,14 +6,19 @@ var failures: Array[String] = []
 class RecordingService extends SupabaseInvitationService:
 	var responses: Array[Dictionary] = []
 	var sent: Array[Dictionary] = []
-	func _send(path: String, body: Dictionary, authenticated: bool) -> Dictionary:
+	func _send(path: String, body: Dictionary, authenticated: bool, _logout_token: String = "") -> Dictionary:
 		sent.append({"path": path, "body": body.duplicate(true), "authenticated": authenticated})
 		await get_tree().process_frame
 		return responses.pop_front() if not responses.is_empty() else {"ok": false, "error": "offline"}
 
 class DelayedLogoutService extends RecordingService:
 	signal release_logout
-	func _send(path: String, body: Dictionary, authenticated: bool) -> Dictionary:
+	signal release_refresh
+
+	func _send(path: String, body: Dictionary, authenticated: bool, _logout_token: String = "") -> Dictionary:
+		if path.contains("grant_type=refresh_token"):
+			await release_refresh
+			return {"ok": true, "data": {"access_token": "late-access", "refresh_token": "late-refresh", "user": {"id": "account"}}}
 		if path.begins_with("/auth/v1/logout"):
 			await release_logout
 			return {"ok": true, "data": {}}
@@ -202,5 +207,15 @@ func _recovery_regressions() -> void:
 	delayed.release_logout.emit()
 	await process_frame
 	check(delayed._access_token == "new-access", "Respuesta de logout cancelado no borra una sesión posterior")
+	delayed._expires_at = 0.0
+	delayed.request("status", {}, 1000)
+	await process_frame
+	delayed.request("logout", {}, 1001)
+	check(delayed._refresh_token.is_empty() and delayed._session.is_empty(), "Cierre borra la sesión antes de esperar la red")
+	delayed.release_refresh.emit()
+	await process_frame
+	check(delayed._refresh_token.is_empty() and delayed._access_token.is_empty(), "Una renovación tardía no recupera la sesión cerrada")
+	delayed.release_logout.emit()
+	await process_frame
 	delayed.queue_free()
 	await process_frame

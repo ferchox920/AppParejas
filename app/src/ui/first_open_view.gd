@@ -249,6 +249,7 @@ func _error() -> void:
 		"consent": ["Necesitamos tu aceptación", "Revisá el uso de datos de la prueba antes de solicitar el código."],
 		"invalid_code": ["No pudimos verificar el acceso", "Revisá el código del correo. Si venció o ya lo usaste, pedí uno nuevo."],
 		"rate_limited": ["Esperá un momento", "Se hicieron varios intentos. Esperá unos minutos antes de reintentar."],
+		"session_storage": ["No pudimos borrar el acceso guardado", "Reintentá cerrar sesión."],
 		"storage": ["No pudimos recuperar tu espacio", "No se pudo leer o guardar el recorrido local. Reintentá sin borrar tus datos."],
 		"offline": ["No pudimos conectar", "No se pudo consultar el estado. Reintentá cuando recuperes la conexión."],
 		"invalid_pin": ["Ese PIN no coincide", "Revisá el PIN o el link. En esta demostración sólo funcionan las invitaciones creadas en este dispositivo."],
@@ -274,7 +275,7 @@ func _error() -> void:
 	if flow.error in ["camera_denied", "scanner_unavailable"]:
 		_button("Volver al escáner", "RetryCamera", func() -> void: flow.navigate("scan"), true)
 		_button("Usar PIN o link", "UsePIN", func() -> void: flow.navigate("join"))
-	elif flow.error == "storage" and flow._retry_screen == "loading":
+	elif flow.error == "session_storage" or (flow.error == "storage" and flow._retry_screen == "loading"):
 		_button("Reintentar", "RetryLoad", func() -> void: flow.retry())
 	elif flow.error in ["name", "email", "consent", "auth"]:
 		_button("Editar nombre" if flow.is_demo() else "Volver al acceso", "FixName", func() -> void: flow.navigate("access"))

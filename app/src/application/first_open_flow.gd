@@ -92,7 +92,22 @@ func verify_access_code(code: String) -> void:
 	_request("verify_code", {"code": code}, "verify")
 
 func logout() -> void:
+	if busy:
+		if is_demo() or _operation == "logout": return
+		service.cancel_pending()
+		busy = false
+	if not is_demo():
+		_discard_account_state()
+		screen = "connect"
 	_request("logout", {}, screen)
+
+func _discard_account_state() -> void:
+	access_draft = {"name": "", "email": "", "consent": false}
+	state.session = {}
+	state.pair = {}
+	state.selection.clear()
+	state.invitation = {"action": "", "outgoing_id": "", "pending_reference": ""}
+	invitation_view = {}
 
 func receive_reference(reference: String) -> void:
 	if busy: return
@@ -123,7 +138,7 @@ func accept() -> void:
 	_request("accept", payload, "review")
 
 func refresh() -> void:
-	_request("status", _actor(), "waiting")
+	_request("status", _actor(), "confirmed" if screen == "confirmed" else "waiting")
 
 func simulate_acceptance() -> void:
 	if screen != "waiting": return
@@ -198,19 +213,12 @@ func _completed(id: int, result: Dictionary) -> void:
 	busy = false
 	if not result.get("ok", false):
 		var reason := str(result.get("error", "unavailable"))
-		if _operation == "bootstrap" and reason not in ["storage", "offline"]:
-			_retry_screen = "waiting" if not str(state.invitation.outgoing_id).is_empty() else "join"
 		_fail(reason, _retry_screen)
 		return
 	match _operation:
 		"send_code": navigate("verify")
 		"logout":
-			access_draft = {"name": "", "email": "", "consent": false}
-			state.session = {}
-			state.pair = {}
-			state.selection.clear()
-			state.invitation = {"action": "", "outgoing_id": "", "pending_reference": ""}
-			invitation_view = {}
+			_discard_account_state()
 			if _persist(): navigate("connect")
 		"bootstrap", "status":
 			if not is_demo(): state.session = result.get("session", {})
@@ -223,12 +231,15 @@ func _completed(id: int, result: Dictionary) -> void:
 			else:
 				state.pair = {}
 			invitation_view = result.get("invitation", {})
-			if not is_demo(): state.invitation.outgoing_id = str(invitation_view.get("id", ""))
+			if not is_demo():
+				state.invitation.outgoing_id = str(invitation_view.get("id", ""))
+				if _retry_screen != "access" and not state.has_pair() and state.invitation.outgoing_id.is_empty() and state.invitation.action == "invite":
+					state.invitation.action = ""
 			if not _persist(): return
 			if not str(state.invitation.pending_reference).is_empty() and state.has_session():
 				_resolve()
 			elif not is_demo() and not state.has_session() and state.introduction != "new": navigate("access")
-			elif not is_demo() and state.invitation.action == "invite" and state.has_session() and not state.has_pair() and str(state.invitation.outgoing_id).is_empty(): connect_route("invite")
+			elif not is_demo() and _operation == "status" and _retry_screen == "access" and state.invitation.action == "invite" and state.has_session() and not state.has_pair() and str(state.invitation.outgoing_id).is_empty(): connect_route("invite")
 			else: navigate(state.route())
 		"access", "verify_code":
 			state.session = result.session
@@ -265,7 +276,10 @@ func _persist() -> bool:
 	return false
 
 func _fail(reason: String, origin: String) -> void:
-	if reason == "auth" and not is_demo():
+	if not is_demo() and _operation in ["bootstrap", "status"]:
+		state.pair = {}
+		invitation_view = {}
+	if reason in ["auth", "session_storage"] and not is_demo():
 		state.session = {}
 		state.pair = {}
 		state.selection.clear()

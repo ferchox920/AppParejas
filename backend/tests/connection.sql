@@ -55,6 +55,9 @@ select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000004
 select register_profile('Rio', true);
 select test_assert(resolve_invitation(repeat('d',32))->>'error' = 'invalid_pin', 'Invitación cancelada inaccesible');
 select test_assert(resolve_invitation(repeat('e',32))->>'error' = 'invalid_pin', 'Invitación vencida inaccesible');
+select test_assert(accept_invitation(repeat('d',32),'40000000-0000-0000-0000-000000000001')->>'error' = 'invalid_pin', 'No aceptar cancelada');
+select test_assert(accept_invitation(repeat('e',32),'40000000-0000-0000-0000-000000000002')->>'error' = 'invalid_pin', 'No aceptar vencida');
+select test_assert(get_connection_state()->'pair' is null, 'La reconciliación tras rechazos no confirma un vínculo');
 select resolve_invitation(repeat('f',32)) from generate_series(1,13);
 select test_assert(resolve_invitation(repeat('f',32))->>'error' = 'rate_limited', 'Límite de intentos');
 reset role;

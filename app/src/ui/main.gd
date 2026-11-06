@@ -91,7 +91,10 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_RESUMED and is_instance_valid(platform):
 		_update_safe_area.call_deferred()
 		platform.read_launch_invitation.call_deferred()
-		if first_open.screen == "waiting" and not first_open.busy: first_open.refresh()
+		if not first_open.is_demo() and first_open.screen in ["waiting", "confirmed"] and not first_open.busy:
+			first_open.refresh.call_deferred()
+		elif first_open.is_demo() and first_open.screen == "waiting" and not first_open.busy:
+			first_open.refresh()
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST and is_instance_valid(first_open):
 		# Esperar a que termine la propagación antes de reconstruir la interfaz.
 		_go_back.call_deferred()

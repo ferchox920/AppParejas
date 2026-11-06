@@ -109,6 +109,14 @@ Cliente Godot · GDScript · Compatibility
 ./tools/Test-Backend.ps1
 ```
 
+En Linux, la prueba bilateral se ejecuta con un solo comando:
+
+```sh
+python3 tools/Test-Connection.py
+```
+
+Requiere Godot, Docker en ejecución, OpenSSL y Python con `venv`. El script prepara y elimina un backend local de prueba. Usa dos sesiones de la app, toma el OTP de Auth sin enviar correo y decodifica el QR de invitación para inyectar el resultado sin cámara.
+
 La comprobación local del **2 de noviembre de 2026** pasó **1.349 verificaciones** del cliente: 232 de dominio y proyecto, 1.009 de primera apertura y 108 de cuentas. También pasaron las pruebas de migración, permisos, restricciones y aceptación concurrente en PostgreSQL 17 aislado. Estas comprobaciones no certifican el despliegue productivo ni completan la validación física de Android.
 
 La [validación de esta publicación](docs/VALIDACION_PUBLICACION.md) registra el alcance. La [guía de desarrollo](docs/GUIA_DESARROLLO.md) conserva los comandos y el contexto técnico ampliado.

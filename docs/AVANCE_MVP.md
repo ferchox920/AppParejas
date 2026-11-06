@@ -1,6 +1,6 @@
 # Avance general de AppParejas
 
-Última actualización: **4 de octubre de 2026**. Última evidencia de ejecución: **4 de octubre de 2026**.
+Última actualización: **6 de noviembre de 2026**. Última evidencia de ejecución: **6 de noviembre de 2026**.
 
 Este es el documento principal para decidir qué desarrollar, revisar los objetivos cumplidos y registrar el avance del MVP. Las guías técnicas vinculadas conservan los detalles y las pruebas. Actualizar este documento al terminar cada bloque de trabajo.
 
@@ -16,7 +16,7 @@ Android es la plataforma en desarrollo y verificación, con Samsung y computador
 
 Tenemos una aplicación instalable en Android, un catálogo y jardín de demostración, acceso real por código de correo y un vínculo bilateral confirmado contra Supabase. **Todavía no tenemos el recorrido completo del MVP:** las elecciones compartidas, el acuerdo, la siembra y el crecimiento reales están pendientes.
 
-El trabajo inmediato es cerrar la validación móvil y la recuperación de cuentas. Después continúa la selección privada y la revelación con consentimiento bilateral.
+La sesión segura de Android está implementada y probada en el emulador con respuestas de red controladas. Falta repetir la recuperación del vínculo principal y la validación de sesión contra Supabase de desarrollo. Después continúa la selección privada y la revelación con consentimiento bilateral.
 
 El refinamiento autónomo del 4 de octubre corrigió recuperación de errores, respuestas tardías, asociación de códigos de invitación, validación de sesión y conservación del formulario/texto aumentado. Pasaron 1347 pruebas de código y 33 comprobaciones del recorrido visual en escritorio. Android emulado conserva cuatro fallos visuales; el Samsung estaba bloqueado. Ver [autoexploración](AUTOEXPLORACION.md). Estos resultados no cierran la validación móvil ni el acceso real tras reabrir.
 
@@ -42,8 +42,8 @@ Estos identificadores son propios del seguimiento. Los puntos «1 y 2» de nuest
 | ID | Objetivo | Estado | Resultado disponible / falta principal |
 | --- | --- | --- | --- |
 | MVP-00 | Base reproducible del proyecto | Cumplido | Motor fijado, estructura, exportación Android y verificaciones reproducibles. |
-| MVP-01 | Validación móvil y decisión del motor | En desarrollo | APK, HTTPS, teclado y navegación comprobados parcialmente; falta completar TalkBack, gestos autenticados y mediciones. |
-| MVP-02 | Cuentas y vínculo bilateral real | Por validar | OTP e invitación aceptada en ambos clientes; falta recuperación tras reabrir y sesión persistente segura. |
+| MVP-01 | Validación móvil y decisión del motor | En desarrollo | APK, HTTPS, teclado y navegación comprobados parcialmente. TalkBack sigue sin exponer los controles de la versión principal en el emulador. El gesto autenticado pasó con una cuenta sintética en el emulador. Faltan mediciones y accesibilidad completa. |
+| MVP-02 | Cuentas y vínculo bilateral real | Por validar | Vínculo confirmado históricamente. Sesión segura verificada con datos de prueba en el emulador. Reapertura y sesión verificadas contra el servicio alojado con cuentas sintéticas. La cuenta principal histórica queda pendiente. |
 | MVP-03 | Selección privada y revelación bilateral | Pendiente | Catálogo y selector disponibles en demo; falta persistencia y consentimiento real de ambas cuentas. |
 | MVP-04 | Acuerdo y receta compartida | Pendiente | Mezcla visual local de prueba; faltan receta autorizada y aprobaciones por versión. |
 | MVP-05 | Siembra única y primer brote | Pendiente | Semilla y brote visuales de demo; faltan transacción, tiempo de servidor e hito real. |
@@ -68,7 +68,7 @@ Evidencia: [README](../README.md), [Android](ANDROID.md), [decisiones iniciales]
 - [x] Formularios desplazables y teclado Samsung con texto al 150%.
 - [x] Gesto lateral desde el formulario: vuelve sin cerrar la app; con teclado conserva el campo escrito.
 - [x] Recorrido autónomo de demo en Samsung y gesto desde su jardín; controles del jardín al 200% sin desborde horizontal.
-- [ ] Comprobar físicamente el gesto desde el vínculo real confirmado con el APK actualizado.
+- [x] Comprobar el gesto desde un vínculo confirmado en Supabase con una cuenta sintética en el emulador. La comprobación física queda diferida.
 - [ ] Validar TalkBack en todo el recorrido destinado al MVP: lectura, foco, campos, errores, desplazamiento y acciones.
 - [ ] Verificar texto al 200% en el dispositivo y conservar todas las acciones accesibles.
 - [ ] Medir rendimiento sostenido del jardín y comparar renderizadores según el presupuesto del plan técnico.
@@ -87,12 +87,15 @@ Evidencia: [validación de cuentas y teléfono](CUENTAS_Y_VALIDACION.md), [prueb
 - [x] Confirmación bilateral con dos cuentas distintas en Samsung y computadora.
 - [x] Pruebas locales de permisos, restricciones, idempotencia y aceptación concurrente.
 - [x] Consulta anónima rechazada por el servicio real.
-- [ ] Recuperar el mismo vínculo después de terminar el proceso y volver a entrar con un código nuevo.
-- [ ] Integrar almacenamiento seguro de sesión, renovación y borrado al cerrar sesión; verificar la reapertura.
-- [ ] Comprobar en el servicio real que una tercera cuenta no accede al vínculo ajeno.
-- [ ] Completar pruebas reales de invitación cancelada/vencida, acceso rechazado y reconexión sin confirmaciones falsas.
+- [x] Recuperar el mismo vínculo alojado después de terminar el proceso y tras verificar un OTP sintético en Android.
+- [ ] Repetir con la cuenta principal histórica y un OTP recibido por correo.
+- [x] Integrar almacenamiento seguro, renovación y borrado al cerrar sesión. Reapertura, revocación y reintento comprobados con respuestas controladas en Android emulado.
+- [x] Verificar esos casos contra Supabase de desarrollo en el emulador con cuentas sintéticas.
+- [x] Comprobar en la base alojada que una tercera identidad sintética no accede al vínculo ajeno bajo el rol autenticado. La prueba se revirtió.
+- [x] Comprobar en la base alojada que no se pueden aceptar invitaciones canceladas o vencidas y que consultar después no confirma un vínculo.
+- [x] Completar la reconexión desde el cliente Android contra el servicio alojado con un vínculo sintético.
 
-La sesión actual vive en memoria: terminar el proceso requiere otro acceso. La recuperación del vínculo y la permanencia de la sesión son criterios diferentes. El alias de Gmail sirve como segunda cuenta de prueba, aunque ambos correos lleguen a una sola bandeja.
+Android conserva cifrado el token de renovación. Al reabrir, consulta Auth y después el estado del vínculo. Para comprobar la recuperación con la cuenta principal del registro histórico hace falta un primer acceso por OTP en el emulador. La permanencia posterior es un criterio separado. El alias de Gmail sirve como segunda cuenta de prueba, aunque ambos correos lleguen a una sola bandeja.
 
 El código solicitado el 2 de octubre no se considera vigente ni se reutiliza como evidencia. Para retomar la prueba, comprobar primero el estado del cliente y solicitar un código nuevo si corresponde, una sola vez.
 
@@ -157,7 +160,7 @@ Cierre del MVP: todos los criterios anteriores cuentan con evidencia; los errore
 
 | Prioridad | Próximo bloque | Resultado esperado |
 | --- | --- | --- |
-| 1 | Reingreso en Samsung y gesto desde confirmación | Recuperar el vínculo existente sin crear otra invitación; la app permanece abierta. |
+| 1 | Reingreso en emulador y gesto desde confirmación | Recuperar el vínculo existente sin crear otra invitación; la app permanece abierta. |
 | 2 | Sesión segura y cierre de validación móvil | Reapertura, TalkBack completo y decisión del motor respaldados por pruebas. |
 | 3 | Casos negativos del vínculo real | Tercera cuenta, cancelación, vencimiento y reconexión verificados. |
 | 4 | MVP-03 | Primera selección privada y revelación bilateral reales. |
@@ -188,6 +191,7 @@ Para iniciar un bloque, tomar la primera prioridad pendiente, consultar su contr
 | 2026-10-03 | Seguimiento | Se crea este documento como referencia general de objetivos y cierre. | Continuar por la prioridad 1; no se ejecutaron pruebas nuevas al crear el documento. |
 | 2026-10-04 | MVP-01 / MVP-02 | Refinamiento autónomo: 1347 pruebas de código y 33 del recorrido visual en escritorio sin fallos; APK actualizado generado. | Emulador con 4 fallos visuales; Samsung bloqueado; sesión segura, reapertura real y TalkBack completo pendientes. |
 | 2026-10-04 | MVP-01 | Samsung desbloqueado: 33 comprobaciones sin fallos; gesto en jardín demo y brote mediante toque. Corrección de ancho al 200%, con 1349 pruebas de código sin fallos. | Gesto autenticado, sesión segura, reapertura real y TalkBack completo pendientes; fallos del emulador aún por resolver. |
+| 2026-11-06 | MVP-01 / MVP-02 | Keystore y reaperturas con sesión de prueba en Android emulado. PostgreSQL local y recorrido bilateral local aprobados. TalkBack activo sin controles con nombre. | Supabase restaurado. Casos negativos aprobados en SQL alojado con rollback. APK conectado visible con GPU del host. Reingreso, OTP sintético y reconexión aprobados contra Supabase desde Android emulado. Pendientes la cuenta principal histórica y la accesibilidad. Prueba física diferida por preferencia del usuario. |
 
 ## Documentos de referencia
 

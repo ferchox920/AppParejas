@@ -21,5 +21,5 @@ func load_state() -> Dictionary:
 	return {"ok": true, "state": state}
 
 func save_state(state: FirstOpenState) -> bool:
-	# Sesión, tokens, referencias y contenido del vínculo permanecen en memoria.
+	# Sólo preferencias e introducción. Android guarda la credencial en su almacén seguro separado.
 	return write_json(path, {"version": 1, "introduction": state.introduction, "preferences": state.preferences})
