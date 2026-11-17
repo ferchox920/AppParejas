@@ -173,6 +173,8 @@ En `AppParejas_API_35` se comprobaron diez resultados con sesiones emitidas por 
 
 Evidencia local en `.artifacts/m4-m5-hosted/` con la captura `migraciones-supabase.jpg`, los registros `emulator-plant.log` y `emulator-sprout.log`, y la captura `brote-supabase.png`.
 
+Después de validar se eliminaron las tres cuentas sintéticas de esta ejecución y su vínculo, cultivo, hito e intentos de invitación. La consulta final confirmó cero cuentas de prueba restantes y las tres migraciones instaladas.
+
 ### MVP-06 · Salida y recuperación
 
 - [ ] Permitir desvinculación unilateral y revocar el acceso cruzado en el servidor.
