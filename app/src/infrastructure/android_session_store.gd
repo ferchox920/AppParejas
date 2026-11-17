@@ -1,14 +1,16 @@
 class_name AndroidSessionStore
 extends RefCounted
 
-# Only the rotating refresh token is stored. The app reconstructs its state online.
+# Default scope stores the rotating refresh token. Other scopes use separate keys and files.
 const PROVIDER := "AndroidKeyStore"
 const IV_SIZE := 12
 var _alias: String
 var _file: JavaObject
 
-func _init(project_url: String) -> void:
+func _init(project_url: String, account_id: String = "") -> void:
 	_alias = "appparejas.session.v1." + project_url.sha256_text()
+	if not account_id.is_empty():
+		_alias = "appparejas.drafts.v1." + JSON.stringify([project_url, account_id]).sha256_text()
 	var activity: JavaObject = Engine.get_singleton("AndroidRuntime").getActivity()
 	var directory: JavaObject = activity.getNoBackupFilesDir()
 	if JavaClassWrapper.get_exception() == null and directory != null:

@@ -87,11 +87,20 @@ func _execute(operation: String, payload: Dictionary, request_id: int, generatio
 		result = {"ok": true} if cleared else {"ok": false, "error": "session_storage"}
 	elif operation == "bootstrap" and _refresh_token.is_empty():
 		result = {"ok": true}
-	elif operation in ["bootstrap", "status", "create", "resolve", "accept", "cancel"]:
+	elif operation in ["bootstrap", "status", "create", "resolve", "accept", "cancel", "pair_state", "submit_selection", "reopen_selection"]:
 		result = await _ensure_session()
 		if result.ok and generation == _generation:
 			match operation:
 				"bootstrap", "status": result = await _rpc("get_connection_state", {})
+				"pair_state": result = await _rpc("get_pair_state", {"pair_id": payload.pair_id})
+				"submit_selection", "reopen_selection":
+					var key := operation + ":" + JSON.stringify(payload)
+					payload.operation_id = _operation_id(key)
+					result = await _rpc(operation, payload)
+					if generation == _generation and (result.ok or result.get("error") in [
+						"version_conflict", "validation_failed", "operation_conflict", "pair_unavailable"
+					]):
+						_operation_ids.erase(key)
 				"create":
 					if _create_token.is_empty(): _create_token = Crypto.new().generate_random_bytes(16).hex_encode()
 					result = await _rpc("create_invitation", {"p_token": _create_token, "p_operation_id": _operation_id("create")})

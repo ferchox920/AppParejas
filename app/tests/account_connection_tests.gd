@@ -83,6 +83,17 @@ func _run() -> void:
 	service.responses.append({"ok": true, "data": {"ok": true, "pair": {"id": "pair", "status": "confirmed", "demo": false}}})
 	result = await invoke(service, "accept", {"reference": create_body.p_token, "invitation_id": "forged", "user_id": "forged"})
 	check(result.ok and service.sent[-1].body.p_token == create_body.p_token and not service.sent[-1].body.has("user_id"), "Aceptar envía secreto y operación sin confiar en actor del cliente")
+	var submission := {"pair_id": "pair", "quality_ids": ["afe_carino", "sos_respeto", "con_escucha"], "catalog_version": 1, "expected_pair_revision": 0, "expected_selection_revision": 0}
+	service.responses.append({"ok": false, "error": "offline"})
+	result = await invoke(service, "submit_selection", submission)
+	var first_operation: String = service.sent[-1].body.operation_id
+	check(result.error == "offline" and service.sent[-1].authenticated, "Compartir usa una operación autenticada y conserva la intención ante una respuesta perdida")
+	service.responses.append({"ok": true, "data": {"ok": true, "phase": "private", "pair_revision": 0, "catalog_version": 1}})
+	await invoke(service, "pair_state", {"pair_id": "pair"})
+	service.responses.append({"ok": true, "data": {"ok": true}})
+	result = await invoke(service, "submit_selection", submission)
+	check(result.ok and service.sent[-1].body.operation_id == first_operation, "La misma intención explícita conserva el ID después de consultar")
+	check(not submission.has("operation_id"), "El servicio no altera la intención del flujo")
 	var before := service.sent.size()
 	result = await invoke(service, "simulate_accept", {})
 	check(not result.ok and service.sent.size() == before, "Servicio real no permite simulación")
@@ -121,7 +132,7 @@ func _real_ui_tests() -> void:
 					var field: LineEdit = app.find_child("AccessCode", true, false)
 					check(field.max_length == 10 and field.virtual_keyboard_type == LineEdit.KEYBOARD_TYPE_NUMBER, "Acceso por OTP usa campo numérico")
 				if screen == "waiting": check(app.find_child("SimulateAcceptance", true, false) == null, "No mostrar simulación en cuenta real")
-				if screen == "confirmed": check(app.find_child("ContinueQualities", true, false) == null, "No fingir recorrido posterior aún no implementado")
+				if screen == "confirmed": check(app.find_child("ContinueQualities", true, false) != null, "El vínculo real ofrece el selector privado")
 	app.first_open.state.pair = {"id": "real-pair", "status": "confirmed", "demo": false}
 	app.show_screen("access")
 	app.find_child("DisplayName", true, false).text = "Prueba"
@@ -149,8 +160,90 @@ func _real_ui_tests() -> void:
 	app.first_open._fail("offline", "confirmed")
 	app.first_open.return_from_error()
 	check(app.screen == "confirmed", "Recuperar error con vínculo real no abre jardín ficticio")
-	app.first_open.continue_to_qualities()
-	check(app.screen == "confirmed" and not app.first_open.state.pair.get("continued", false), "El flujo real tampoco permite continuar a cualidades demo mediante una llamada directa")
+	var service: RecordingService = app.first_open.service
+	service.base_url = "https://draft-%d.example.test" % Time.get_ticks_usec()
+	service.public_key = "sb_publishable_test"
+	service._set_session({"access_token": "test-access", "refresh_token": "test-refresh", "user": {"id": "account"}})
+	app.first_open.state.session = service._session.duplicate()
+	service.responses.append({"ok": true, "data": {"ok": false, "error": "pair_unavailable"}})
+	app.find_child("ContinueQualities", true, false).pressed.emit()
+	await service.completed
+	check(app.screen == "error" and app.first_open.error == "pair_unavailable", "El rechazo del vínculo impide abrir el selector")
+	check(service.sent[-1] == {"path": "/rest/v1/rpc/get_pair_state", "body": {"pair_id": "real-pair"}, "authenticated": true}, "La entrada consulta el vínculo con la sesión autenticada")
+	service.responses.append({"ok": true, "data": {"ok": true, "phase": "private", "pair_revision": 0.0, "catalog_version": 2.0}})
+	app.first_open.retry()
+	await service.completed
+	check(app.screen == "error" and app.first_open.error == "catalog_outdated", "Un catálogo distinto impide abrir el selector")
+	service.responses.append({"ok": true, "data": {"ok": true, "phase": "private", "pair_revision": 0.0, "catalog_version": 1.0}})
+	app.first_open.retry()
+	await service.completed
+	check(app.screen == "selection" and app.first_open.selection_base_revision == 0, "El selector privado abre con la revisión del servidor")
+	check(app.selection.is_empty() and app._apply.name == "ShareSelection" and app._apply.disabled, "El selector real arranca vacío y compartir requiere una elección válida")
+	app.find_child("afe_carino", true, false).button_pressed = true
+	app.find_child("afe_ternura", true, false).button_pressed = true
+	check(app.selection.size() == 2 and app._counter.text.contains("Elegí entre 3 y 5"), "Dos cualidades todavía no forman una selección válida")
+	app.find_child("afe_calidez", true, false).button_pressed = true
+	check(app.selection.size() == 3 and app._counter.text.contains("Selección válida"), "Tres cualidades forman una selección válida")
+	app.find_child("afe_amabilidad", true, false).button_pressed = true
+	app.active_family = "sos"
+	app._render()
+	app.find_child("sos_respeto", true, false).button_pressed = true
+	check(app.selection.size() == 5 and app._counter.text.contains("Selección válida"), "Cinco cualidades de varias familias forman una selección válida")
+	var sixth := app.find_child("sos_paciencia", true, false) as CheckBox
+	sixth.button_pressed = true
+	check(app.selection.size() == 5 and not sixth.button_pressed and app._counter.text.contains("Ya elegiste 5"), "La sexta cualidad se rechaza y se explica el límite")
+	check(service.sent[-1].path.ends_with("/get_pair_state"), "Editar la selección privada no registra consentimiento")
+	var intended: Array[String] = app.selection.duplicate()
+	service.responses.append({"ok": false, "error": "offline"})
+	app._apply.pressed.emit()
+	await service.completed
+	check(app.screen == "error" and service.sent[-1].body.quality_ids == intended
+		and service.sent[-1].body.expected_pair_revision is int, "Compartir conserva las cualidades al ocultar el selector y envía la revisión entera")
+	service.responses.append({"ok": true, "data": {"ok": true, "phase": "private", "pair_revision": 0.0, "catalog_version": 1.0}})
+	app.first_open.retry()
+	await service.completed
+	check(app.screen == "selection" and service.sent[-1].path.ends_with("/get_pair_state"), "El reintento primero consulta el estado")
+	root.propagate_notification(Node.NOTIFICATION_WM_GO_BACK_REQUEST)
+	await process_frame
+	check(app.screen == "confirmed" and app.selection.is_empty() and app.first_open.selection_base_revision == -1, "Volver al vínculo limpia la selección temporal")
+	if app.first_open.uses_secure_drafts():
+		var private_state := {"ok": true, "data": {"ok": true, "phase": "private", "pair_revision": 1.0, "catalog_version": 1.0}}
+		var saved: Array[String] = ["afe_carino", "afe_ternura", "afe_calidez", "afe_amabilidad", "sos_respeto"]
+		app.first_open.state.pair.id = "other-pair"
+		service.responses.append(private_state)
+		app.first_open.continue_to_qualities()
+		await service.completed
+		check(app.selection.is_empty(), "Otro vínculo de la misma cuenta no recibe el borrador")
+		app.first_open.navigate("confirmed")
+		app.first_open.state.pair.id = "real-pair"
+		app.first_open.state.session.id = "other-account"
+		service.responses.append(private_state)
+		app.first_open.continue_to_qualities()
+		await service.completed
+		check(app.selection.is_empty(), "Otra cuenta no recibe el borrador")
+		app.first_open.navigate("confirmed")
+		app.first_open.state.session.id = "account"
+		service.responses.append(private_state)
+		app.first_open.continue_to_qualities()
+		await service.completed
+		check(app.selection == saved and app.first_open.selection_base_revision == 0, "Recuperar el borrador conserva sus IDs y revisión de base")
+		var before_resume := service.sent.size()
+		service.responses.append({"ok": false, "error": "offline"})
+		app.first_open.revalidate_private_selection()
+		check(app.screen == "loading" and app.selection.is_empty(), "Al retomar se oculta el selector mientras se verifica el vínculo")
+		await service.completed
+		check(app.screen == "error" and app.first_open.error == "offline", "Sin red la verificación ofrece reintentar")
+		check(not AndroidSessionStore.new(service.base_url, "account").read_token().is_empty(), "Un error de red conserva el borrador cifrado")
+		service.responses.append(private_state)
+		app.first_open.retry()
+		await service.completed
+		check(app.screen == "selection" and app.selection == saved and app.first_open.selection_base_revision == 0, "Al reconectar se restaura el borrador conservando su revisión original")
+		check(service.sent.size() == before_resume + 2 and service.sent[-1].path.ends_with("/get_pair_state") and service.sent[-2].path.ends_with("/get_pair_state"), "Retomar y reintentar sólo consultan el vínculo")
+		service.responses.append({"ok": true, "data": {}})
+		app.first_open.logout()
+		await service.completed
+		check(app.screen == "connect" and app.selection.is_empty(), "Cerrar sesión limpia la selección en pantalla")
+		check(AndroidSessionStore.new(service.base_url, "account").read_token().is_empty(), "Cerrar sesión borra los borradores cifrados de la cuenta")
 	app.first_open.state.selection.assign(["afe_carino", "sos_respeto", "con_escucha"])
 	app.first_open.state.invitation.outgoing_id = "old-invitation"
 	app.first_open._fail("auth", "waiting")

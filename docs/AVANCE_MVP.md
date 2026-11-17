@@ -44,7 +44,7 @@ Estos identificadores son propios del seguimiento. Los puntos «1 y 2» de nuest
 | MVP-00 | Base reproducible del proyecto | Cumplido | Motor fijado, estructura, exportación Android y verificaciones reproducibles. |
 | MVP-01 | Validación móvil y decisión del motor | En desarrollo | APK, HTTPS, teclado y navegación comprobados parcialmente. TalkBack sigue sin exponer los controles de la versión principal en el emulador. El gesto autenticado pasó con una cuenta sintética en el emulador. Faltan mediciones y accesibilidad completa. |
 | MVP-02 | Cuentas y vínculo bilateral real | Por validar | Vínculo confirmado históricamente. Sesión segura verificada con datos de prueba en el emulador. Reapertura y sesión verificadas contra el servicio alojado con cuentas sintéticas. La cuenta principal histórica queda pendiente. |
-| MVP-03 | Selección privada y revelación bilateral | Pendiente | Catálogo y selector disponibles en demo; falta persistencia y consentimiento real de ambas cuentas. |
+| MVP-03 | Selección privada y revelación bilateral | Validado en desarrollo | Borrador privado, espera, revelación y reapertura comprobados en Android emulado y Supabase de desarrollo. |
 | MVP-04 | Acuerdo y receta compartida | Pendiente | Mezcla visual local de prueba; faltan receta autorizada y aprobaciones por versión. |
 | MVP-05 | Siembra única y primer brote | Pendiente | Semilla y brote visuales de demo; faltan transacción, tiempo de servidor e hito real. |
 | MVP-06 | Salida, eliminación y recuperación | Pendiente | Cierre de sesión y algunos errores de red implementados; faltan desvinculación y eliminación real. |
@@ -103,12 +103,14 @@ Evidencia: [cuentas y validación](CUENTAS_Y_VALIDACION.md), `backend/supabase/m
 
 ### MVP-03 · Selección privada y revelación
 
-- [ ] Guardar una selección propia de 3 a 5 IDs únicos del catálogo vigente, aislada por cuenta y vínculo.
-- [ ] Mantener las elecciones privadas hasta que ambos consientan compartir sus revisiones vigentes.
-- [ ] Mostrar espera y revelar sólo la proyección autorizada por el servidor.
-- [ ] Recuperar el borrador propio y manejar cambios concurrentes y pérdida de conexión.
-- [ ] Al reabrir elecciones, retirar los consentimientos y aprobaciones correspondientes según el contrato.
-- [ ] Probar con dos integrantes y una tercera cuenta, incluyendo acceso directo por API.
+[Objetivos, recorrido medible y pruebas de aceptación de M3](MVP_03.md).
+
+- [x] Guardar una selección propia de 3 a 5 IDs únicos del catálogo vigente, aislada por cuenta y vínculo.
+- [x] Mantener las elecciones privadas hasta que ambos consientan compartir sus revisiones vigentes.
+- [x] Mostrar espera y revelar sólo la proyección autorizada por el servidor.
+- [x] Recuperar el borrador propio y manejar cambios concurrentes y pérdida de conexión.
+- [x] Al reabrir elecciones, retirar ambos consentimientos y ocultar la revelación. Las aprobaciones se incorporan en M4.
+- [x] Probar con dos integrantes y una tercera cuenta, incluyendo acceso directo por API.
 
 Cierre: las dos cuentas comparten y recuperan elecciones reales sin filtrarlas antes del consentimiento. El selector local y la segunda elección ficticia no cumplen este objetivo.
 

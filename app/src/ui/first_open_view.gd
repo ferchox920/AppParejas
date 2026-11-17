@@ -27,6 +27,7 @@ func _ready() -> void:
 		"review": _review()
 		"waiting": _waiting()
 		"confirmed": _confirmed()
+		"selection_waiting", "selection_revealed": _shared_selection()
 		"error": _error()
 	_status = _label("", 14, AppTheme.MUTED)
 	_status.name = "Status"
@@ -235,15 +236,46 @@ func _confirmed() -> void:
 	if not flow.is_demo():
 		_title("Sus espacios están conectados")
 		_label("El vínculo entre las dos cuentas está confirmado y guardado. Podés cerrar y volver a entrar para recuperarlo.")
-		_label("La elección compartida y la siembra estarán disponibles en la próxima etapa de desarrollo.")
+		_button("Ver mis elecciones", "ContinueQualities", func() -> void: flow.continue_to_qualities())
 		return
 	_title("El espacio de ejemplo está conectado")
 	_label("Vínculo de demostración confirmado. No conecta dos cuentas ni dos teléfonos reales.")
 	_label("Ahora podés probar la elección individual de 3 a 5 cualidades.")
 	_button("Elegir mis cualidades", "ContinueQualities", func() -> void: flow.continue_to_qualities())
 
+func _shared_selection() -> void:
+	var revealed := flow.screen == "selection_revealed"
+	var own: Dictionary = flow.selection_view.get("own_selection", {})
+	var choices: Array = own.get("quality_ids", [])
+	var catalog := QualityCatalog.index(QualityCatalog.load_catalog())
+	_title("Sus elecciones" if revealed else "Tus elecciones están listas")
+	_card("Tus cualidades", _quality_names(choices, catalog))
+	if revealed:
+		var shared: Array = flow.selection_view.get("reveal", {}).get("selections", [])
+		var partner: Array = shared[1] if shared[0] == choices else shared[0]
+		_card("Las cualidades de tu pareja", _quality_names(partner, catalog))
+	else:
+		_label("Cuando tu pareja también comparta sus elecciones, van a poder ver las dos selecciones.")
+	_button("Actualizar elecciones", "RefreshSelection", func() -> void: flow.revalidate_private_selection())
+	_label("Si volvés a elegir, las dos selecciones quedan privadas y ambos tienen que compartir de nuevo.")
+	_button("Volver a elegir", "ReopenSelection", func() -> void: flow.reopen_selection(), true)
+	_button("Volver al vínculo", "ReturnToPair", func() -> void: flow.navigate("confirmed"), true)
+
+func _quality_names(ids: Array, catalog: Dictionary) -> String:
+	var labels := PackedStringArray()
+	for id: String in ids:
+		labels.append(str(catalog.get(id, {}).get("label", id)))
+	return "\n".join(labels)
+
 func _error() -> void:
 	var messages := {
+		"draft_cleanup": ["Sesión cerrada", "No pudimos borrar el borrador guardado de esta cuenta."],
+		"version_conflict": ["Las elecciones cambiaron", "Consultá el estado actualizado antes de volver a actuar."],
+		"validation_failed": ["Revisá tus cualidades", "Elegí entre 3 y 5 cualidades distintas del catálogo vigente."],
+		"operation_conflict": ["La solicitud ya cambió", "Consultá el estado actualizado antes de volver a actuar."],
+		"pair_unavailable": ["Vínculo no disponible", "No pudimos verificar que tu cuenta siga vinculada."],
+		"selection_unavailable": ["Selección no disponible", "Volvé al vínculo e intentá abrir tus cualidades otra vez."],
+		"catalog_outdated": ["El catálogo cambió", "Actualizá la app para elegir con el catálogo vigente."],
 		"configuration": ["Falta conectar el servicio", "La configuración del entorno de desarrollo no está disponible. No se inició una sesión de demostración."],
 		"email": ["Revisá tu correo", "Ingresá una dirección de correo válida."],
 		"consent": ["Necesitamos tu aceptación", "Revisá el uso de datos de la prueba antes de solicitar el código."],
@@ -266,6 +298,10 @@ func _error() -> void:
 	}
 	var message: Array = messages.get(flow.error, messages.unavailable)
 	if not flow.is_demo() and flow.error == "invalid_pin": message = ["Invitación no disponible", "Revisá el código o pedí uno nuevo. Puede estar vencido o cancelado."]
+	if flow.error in ["offline", "unavailable"] and flow._operation in ["submit_selection", "reopen_selection"]:
+		message = ["Falta confirmar el estado", "Recuperá la conexión y consultá el vínculo para saber si se completó la acción."]
+	elif flow.error == "offline" and flow._operation == "pair_state" and flow.uses_secure_drafts():
+		message = ["No pudimos verificar el vínculo", "Tu borrador sigue guardado en este dispositivo. Recuperá la conexión y reintentá para volver a abrirlo."]
 	_title(message[0])
 	_label(message[1], 16, AppTheme.ERROR)
 	if flow.error == "camera_denied":
@@ -277,13 +313,16 @@ func _error() -> void:
 		_button("Usar PIN o link", "UsePIN", func() -> void: flow.navigate("join"))
 	elif flow.error == "session_storage" or (flow.error == "storage" and flow._retry_screen == "loading"):
 		_button("Reintentar", "RetryLoad", func() -> void: flow.retry())
+	elif flow.error == "draft_cleanup":
+		_button("Continuar", "ContinueAfterLogout", func() -> void: flow.navigate("connect"))
 	elif flow.error in ["name", "email", "consent", "auth"]:
 		_button("Editar nombre" if flow.is_demo() else "Volver al acceso", "FixName", func() -> void: flow.navigate("access"))
 	elif flow.error == "invalid_code":
 		_button("Ingresar otro código", "RetryAccessCode", func() -> void: flow.navigate("verify"))
 		_button("Pedir un nuevo código", "NewAccessCode", func() -> void: flow.navigate("access"), true)
 	else:
-		_button("Reintentar", "RetryOperation", func() -> void: flow.retry())
+		var retry_label := "Consultar estado" if flow._operation in ["submit_selection", "reopen_selection"] else "Reintentar"
+		_button(retry_label, "RetryOperation", func() -> void: flow.retry())
 		_button("Volver al espacio" if flow.state.has_pair() else "Usar otra invitación", "RecoverInvitation", func() -> void: flow.return_from_error(), true)
 
 func _preferences() -> void:

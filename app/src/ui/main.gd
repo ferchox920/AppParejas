@@ -69,13 +69,15 @@ func _ready() -> void:
 	if auto_start: first_open.start()
 
 func _flow_changed() -> void:
+	if not first_open.is_demo() and (screen != "selection" or first_open.screen != "selection"):
+		selection.assign(first_open.state.selection if first_open.screen == "selection" else [])
 	screen = first_open.screen
 	text_scale = float(first_open.state.preferences.text_scale)
 	reduced_motion = bool(first_open.state.preferences.reduced_motion)
 	if DisplayServer.accessibility_should_reduce_animation() == 1: reduced_motion = true
 	theme.default_font_size = roundi(16 * text_scale)
 	theme.set_font_size("font_size", "Button", roundi(16 * text_scale))
-	if not first_open.state.selection.is_empty():
+	if first_open.is_demo() and not first_open.state.selection.is_empty():
 		if QualityCatalog.validate_selection(first_open.state.selection, catalog).is_empty():
 			selection = first_open.state.selection.duplicate()
 	_render()
@@ -91,7 +93,9 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_RESUMED and is_instance_valid(platform):
 		_update_safe_area.call_deferred()
 		platform.read_launch_invitation.call_deferred()
-		if not first_open.is_demo() and first_open.screen in ["waiting", "confirmed"] and not first_open.busy:
+		if not first_open.is_demo() and first_open.screen in ["selection", "selection_waiting", "selection_revealed"]:
+			first_open.revalidate_private_selection.call_deferred()
+		elif not first_open.is_demo() and first_open.screen in ["waiting", "confirmed"] and not first_open.busy:
 			first_open.refresh.call_deferred()
 		elif first_open.is_demo() and first_open.screen == "waiting" and not first_open.busy:
 			first_open.refresh()
@@ -111,7 +115,9 @@ func _go_back() -> void:
 		"welcome", "garden": pass
 		"confirmed":
 			if first_open.is_demo(): first_open.navigate("connect")
-		"selection": show_screen("garden")
+		"selection", "selection_waiting", "selection_revealed":
+			if first_open.is_demo(): show_screen("garden")
+			else: first_open.navigate("confirmed")
 		"scan": first_open.navigate("join")
 		"access": first_open.navigate("join" if first_open.state.invitation.action == "join" else "connect")
 		"verify": first_open.navigate("access")
@@ -178,7 +184,7 @@ func _render() -> void:
 		_body.add_child(view)
 		get_viewport().gui_release_focus()
 		return
-	_label("AppParejas · Demostración local", 14, AppTheme.FOREST)
+	_label("AppParejas · Demostración local" if first_open.is_demo() else "AppParejas · Selección privada", 14, AppTheme.FOREST)
 	match screen:
 		"selection": _selection()
 		_: _garden_screen()
@@ -247,7 +253,17 @@ func _garden_screen() -> void:
 
 func _selection() -> void:
 	_title("¿Qué querés cultivar?")
-	_label("Probá entre 3 y 5 cualidades. La otra elección es un ejemplo fijo.")
+	var demo := first_open.is_demo()
+	var instructions := "Elegí entre 3 y 5 cualidades. El borrador queda guardado en este dispositivo."
+	if demo:
+		instructions = "Probá entre 3 y 5 cualidades. La otra elección es un ejemplo fijo."
+	elif not first_open.uses_secure_drafts():
+		instructions = "Elegí entre 3 y 5 cualidades. Tu selección se conserva mientras estés en esta pantalla."
+	_label(instructions)
+	if not demo:
+		_label("Las cualidades se muestran cuando ambos comparten sus elecciones.")
+		if first_open.selection_view.get("partner_shared") == true:
+			_label("Tu pareja ya compartió sus elecciones.", 14, AppTheme.MUTED)
 	var tabs := HFlowContainer.new()
 	tabs.add_theme_constant_override("h_separation", 8)
 	tabs.add_theme_constant_override("v_separation", 8)
@@ -284,28 +300,46 @@ func _selection() -> void:
 		column.add_child(check)
 		_label(quality["definition"], 14, AppTheme.MUTED, column)
 	_counter = _label("", 16, AppTheme.FOREST)
-	_apply = _button("Ver semilla de ejemplo", func() -> void:
-		first_open.save_selection(selection)
-		stage = "seed"
-		show_screen("garden")
-	)
-	_button("Volver", func() -> void: show_screen("garden"))
+	_apply = null
+	if demo:
+		_apply = _button("Ver semilla de ejemplo", func() -> void:
+			first_open.save_selection(selection)
+			stage = "seed"
+			show_screen("garden")
+		)
+		_button("Volver", func() -> void: show_screen("garden"))
+	else:
+		_apply = _button("Compartir mis elecciones", func() -> void: first_open.share_selection(selection))
+		_apply.name = "ShareSelection"
+		_button("Volver al vínculo", func() -> void: first_open.navigate("confirmed"))
 	_update_selection_status()
 
 func _toggle_quality(id: String, enabled: bool, check: CheckBox) -> void:
-	if enabled and not selection.has(id):
-		if selection.size() == 5:
+	var updated := selection.duplicate()
+	if enabled and not updated.has(id):
+		if updated.size() == 5:
 			check.set_pressed_no_signal(false)
-			_counter.text = "Ya elegiste 5. Quitá una para probar otra."
+			_counter.text = "Ya elegiste 5. Quitá una para elegir otra."
 			return
-		selection.append(id)
+		updated.append(id)
 	elif not enabled:
-		selection.erase(id)
+		updated.erase(id)
+	if not first_open.is_demo() and not first_open.save_private_draft(updated):
+		check.set_pressed_no_signal(selection.has(id))
+		_counter.text = "No pudimos guardar el borrador. Volvé a intentar."
+		return
+	selection = updated
 	_update_selection_status()
 
 func _update_selection_status() -> void:
-	_counter.text = "%d elegidas de 5 · mínimo 3" % selection.size()
-	_apply.disabled = QualityCatalog.validate_selection(selection, catalog) != ""
+	var validation := QualityCatalog.validate_selection(selection, catalog)
+	var count := "%d elegidas de 5" % selection.size()
+	if first_open.is_demo():
+		_counter.text = count + " · mínimo 3"
+	else:
+		var status := "Selección válida." if validation.is_empty() else validation
+		_counter.text = count + " · " + status
+	_apply.disabled = not validation.is_empty()
 
 func _set_text_scale(value: float) -> void:
 	text_scale = value

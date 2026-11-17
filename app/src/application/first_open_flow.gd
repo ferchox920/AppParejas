@@ -9,6 +9,10 @@ var screen: String = "loading"
 var error: String = ""
 var busy: bool = false
 var invitation_view: Dictionary = {}
+var selection_base_revision: int = -1
+var selection_view: Dictionary = {}
+var _selection_catalog_version: int = 0
+var _draft_cleanup_failed := false
 var intro_step: int = 0
 var access_draft: Dictionary = {"name": "", "email": "", "consent": false}
 var timeout_seconds: float = 12.0
@@ -61,6 +65,11 @@ func _bootstrap() -> void:
 func navigate(next: String) -> void:
 	if busy: return
 	error = ""
+	if next not in ["selection", "selection_waiting", "selection_revealed"]:
+		selection_view.clear()
+	if next != "selection":
+		selection_base_revision = -1
+		if not is_demo(): state.selection.clear()
 	screen = next
 	changed.emit()
 
@@ -97,6 +106,8 @@ func logout() -> void:
 		service.cancel_pending()
 		busy = false
 	if not is_demo():
+		var drafts := _draft_store()
+		_draft_cleanup_failed = drafts != null and not drafts.clear()
 		_discard_account_state()
 		screen = "connect"
 	_request("logout", {}, screen)
@@ -106,6 +117,7 @@ func _discard_account_state() -> void:
 	state.session = {}
 	state.pair = {}
 	state.selection.clear()
+	selection_view.clear()
 	state.invitation = {"action": "", "outgoing_id": "", "pending_reference": ""}
 	invitation_view = {}
 
@@ -157,14 +169,46 @@ func decline() -> void:
 	if _persist(): navigate("connect")
 
 func continue_to_qualities() -> void:
-	if not is_demo() or not state.has_pair(): return
+	if busy or not state.has_pair(): return
+	if not is_demo():
+		_request("pair_state", {"pair_id": state.pair.id}, "confirmed")
+		return
 	state.pair.continued = true
 	if _persist(): navigate("selection")
+
+func revalidate_private_selection() -> void:
+	if busy or is_demo() or not state.has_pair(): return
+	if screen not in ["selection", "selection_waiting", "selection_revealed"]: return
+	# Ocultar el contenido anterior mientras se vuelve a consultar el vínculo.
+	screen = "loading"
+	continue_to_qualities()
+
+func share_selection(ids: Array[String]) -> void:
+	if busy or is_demo() or screen != "selection" or not state.has_pair(): return
+	if selection_view.get("phase") != "private": return
+	if not QualityCatalog.validate_selection(ids, QualityCatalog.load_catalog()).is_empty(): return
+	var own: Variant = selection_view.get("own_selection")
+	screen = "loading"
+	_request("submit_selection", {
+		"pair_id": state.pair.id, "quality_ids": ids.duplicate(),
+		"catalog_version": _selection_catalog_version,
+		"expected_pair_revision": selection_view.pair_revision,
+		"expected_selection_revision": int(own.get("revision", 0)) if own is Dictionary else 0
+	}, "confirmed")
+
+func reopen_selection() -> void:
+	if busy or not state.has_pair() or screen not in ["selection_waiting", "selection_revealed"]: return
+	screen = "loading"
+	_request("reopen_selection", {
+		"pair_id": state.pair.id, "expected_pair_revision": selection_view.pair_revision
+	}, "confirmed")
 
 func retry() -> void:
 	if busy: return
 	if _retry_screen == "loading":
 		start()
+	elif _operation in ["submit_selection", "reopen_selection"]:
+		continue_to_qualities()
 	elif error == "storage":
 		if _persist(): navigate(state.route())
 	elif not _operation.is_empty():
@@ -191,6 +235,50 @@ func save_selection(ids: Array[String]) -> void:
 	state.selection = ids.duplicate()
 	_persist()
 
+func uses_secure_drafts() -> bool:
+	return Engine.has_singleton("AndroidRuntime") and service is SupabaseInvitationService
+
+func _draft_store() -> AndroidSessionStore:
+	if not uses_secure_drafts() or not state.has_session(): return null
+	return AndroidSessionStore.new((service as SupabaseInvitationService).base_url, state.session.id)
+
+func save_private_draft(ids: Array[String]) -> bool:
+	if is_demo() or screen != "selection" or selection_base_revision < 0 or not state.has_pair(): return false
+	var drafts := _draft_store()
+	if drafts == null: return not uses_secure_drafts()
+	var raw := drafts.read_token()
+	var entries: Variant = {} if raw.is_empty() else JSON.parse_string(raw)
+	if not entries is Dictionary: return false
+	entries[state.pair.id] = {"ids": ids, "catalog_version": _selection_catalog_version, "revision": selection_base_revision}
+	return drafts.write_token(JSON.stringify(entries))
+
+func _restore_private_draft(catalog: Dictionary) -> void:
+	state.selection.clear()
+	var own: Variant = selection_view.get("own_selection")
+	if own is Dictionary:
+		var ids: Array[String] = []
+		ids.assign(own.get("quality_ids", []))
+		if QualityCatalog.validate_selection(ids, catalog).is_empty(): state.selection = ids
+	var drafts := _draft_store()
+	if drafts == null: return
+	var raw := drafts.read_token()
+	if raw.is_empty(): return
+	var entries: Variant = JSON.parse_string(raw)
+	if not entries is Dictionary: return
+	var entry: Variant = entries.get(state.pair.id)
+	if not entry is Dictionary or entry.get("catalog_version") != _selection_catalog_version: return
+	var ids: Variant = entry.get("ids")
+	var revision: Variant = entry.get("revision")
+	if not ids is Array or ids.size() > 5 or (not revision is int and not revision is float): return
+	if revision < 0 or revision > selection_base_revision or revision != floorf(revision): return
+	var known := QualityCatalog.index(catalog)
+	var restored: Array[String] = []
+	for id: Variant in ids:
+		if not id is String or not known.has(id) or restored.has(id): return
+		restored.append(id)
+	state.selection = restored
+	selection_base_revision = int(revision)
+
 func _actor() -> Dictionary:
 	return {"user_id": state.session.get("id", ""), "name": state.session.get("name", ""),
 		"invitation_id": state.invitation.get("outgoing_id", "")}
@@ -216,10 +304,37 @@ func _completed(id: int, result: Dictionary) -> void:
 		_fail(reason, _retry_screen)
 		return
 	match _operation:
+		"pair_state":
+			var revision: Variant = result.get("pair_revision")
+			var phase: String = str(result.get("phase", ""))
+			if phase not in ["private", "waiting", "revealed"] or (not revision is int and not revision is float):
+				_fail("selection_unavailable", "confirmed")
+				return
+			if revision < 0 or revision > 2147483647 or revision != floorf(revision):
+				_fail("selection_unavailable", "confirmed")
+				return
+			var catalog := QualityCatalog.load_catalog()
+			if result.get("catalog_version") != catalog.get("catalog_version"):
+				_fail("catalog_outdated", "confirmed")
+				return
+			selection_view = result
+			selection_view.pair_revision = int(revision)
+			selection_base_revision = int(revision)
+			_selection_catalog_version = int(catalog.catalog_version)
+			match phase:
+				"private":
+					_restore_private_draft(catalog)
+					navigate("selection")
+				"waiting": navigate("selection_waiting")
+				"revealed": navigate("selection_revealed")
+		"submit_selection", "reopen_selection":
+			continue_to_qualities()
 		"send_code": navigate("verify")
 		"logout":
 			_discard_account_state()
-			if _persist(): navigate("connect")
+			if _draft_cleanup_failed:
+				_fail("draft_cleanup", "connect")
+			elif _persist(): navigate("connect")
 		"bootstrap", "status":
 			if not is_demo(): state.session = result.get("session", {})
 			if result.has("pair"):
@@ -285,6 +400,9 @@ func _fail(reason: String, origin: String) -> void:
 		state.selection.clear()
 		state.invitation.outgoing_id = ""
 		invitation_view = {}
+	selection_base_revision = -1
+	selection_view.clear()
+	if not is_demo(): state.selection.clear()
 	error = reason
 	_retry_screen = origin
 	screen = "error"
