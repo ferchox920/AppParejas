@@ -1,7 +1,7 @@
 class_name RecipePreview
 extends RefCounted
 
-# Esta receta es una vista previa local. La receta autorizada vendrá del servidor.
+# Receta de la demostración local. Las parejas autenticadas reciben su receta del servidor.
 static func build(first: Array[String], second: Array[String], catalog: Dictionary) -> Dictionary:
 	if QualityCatalog.validate_selection(first, catalog) != "" or QualityCatalog.validate_selection(second, catalog) != "":
 		return {}

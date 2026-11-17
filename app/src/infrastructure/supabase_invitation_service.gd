@@ -87,18 +87,19 @@ func _execute(operation: String, payload: Dictionary, request_id: int, generatio
 		result = {"ok": true} if cleared else {"ok": false, "error": "session_storage"}
 	elif operation == "bootstrap" and _refresh_token.is_empty():
 		result = {"ok": true}
-	elif operation in ["bootstrap", "status", "create", "resolve", "accept", "cancel", "pair_state", "submit_selection", "reopen_selection"]:
+	elif operation in ["bootstrap", "status", "create", "resolve", "accept", "cancel", "pair_state", "submit_selection", "reopen_selection", "update_agreement", "approve_agreement"]:
 		result = await _ensure_session()
 		if result.ok and generation == _generation:
 			match operation:
 				"bootstrap", "status": result = await _rpc("get_connection_state", {})
 				"pair_state": result = await _rpc("get_pair_state", {"pair_id": payload.pair_id})
-				"submit_selection", "reopen_selection":
+				"submit_selection", "reopen_selection", "update_agreement", "approve_agreement":
 					var key := operation + ":" + JSON.stringify(payload)
 					payload.operation_id = _operation_id(key)
 					result = await _rpc(operation, payload)
 					if generation == _generation and (result.ok or result.get("error") in [
-						"version_conflict", "validation_failed", "operation_conflict", "pair_unavailable"
+						"version_conflict", "validation_failed", "operation_conflict", "pair_unavailable",
+						"agreement_version_conflict", "agreement_unavailable", "invalid_agreement"
 					]):
 						_operation_ids.erase(key)
 				"create":

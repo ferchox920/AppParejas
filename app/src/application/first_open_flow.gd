@@ -11,6 +11,7 @@ var busy: bool = false
 var invitation_view: Dictionary = {}
 var selection_base_revision: int = -1
 var selection_view: Dictionary = {}
+var agreement_draft: Dictionary = {}
 var _selection_catalog_version: int = 0
 var _draft_cleanup_failed := false
 var intro_step: int = 0
@@ -65,8 +66,9 @@ func _bootstrap() -> void:
 func navigate(next: String) -> void:
 	if busy: return
 	error = ""
-	if next not in ["selection", "selection_waiting", "selection_revealed"]:
+	if next not in ["selection", "selection_waiting", "selection_revealed", "agreement", "agreement_edit"]:
 		selection_view.clear()
+	if next != "agreement_edit": agreement_draft.clear()
 	if next != "selection":
 		selection_base_revision = -1
 		if not is_demo(): state.selection.clear()
@@ -118,6 +120,7 @@ func _discard_account_state() -> void:
 	state.pair = {}
 	state.selection.clear()
 	selection_view.clear()
+	agreement_draft.clear()
 	state.invitation = {"action": "", "outgoing_id": "", "pending_reference": ""}
 	invitation_view = {}
 
@@ -203,10 +206,50 @@ func reopen_selection() -> void:
 		"pair_id": state.pair.id, "expected_pair_revision": selection_view.pair_revision
 	}, "confirmed")
 
+func agreement() -> Dictionary:
+	if selection_view.get("phase") != "revealed": return {}
+	var value: Variant = selection_view.get("agreement")
+	if not value is Dictionary or not value.get("recipe") is Dictionary: return {}
+	var version: Variant = value.get("version")
+	if (not version is int and not version is float) or version < 1 or version > 2147483647 or version != floorf(version):
+		return {}
+	return value
+
+func refresh_agreement() -> void:
+	if busy or is_demo() or not state.has_pair(): return
+	var origin := "agreement_edit" if screen == "agreement_edit" else "agreement"
+	screen = "loading"
+	_request("pair_state", {"pair_id": state.pair.id}, origin)
+
+func edit_agreement() -> void:
+	var current := agreement()
+	if busy or screen != "agreement" or current.is_empty(): return
+	agreement_draft = {"name": current.name, "intention": current.intention, "version": current.version}
+	navigate("agreement_edit")
+
+func save_agreement() -> void:
+	var current := agreement()
+	if busy or screen != "agreement_edit" or current.is_empty() or agreement_draft.is_empty(): return
+	var seed_name: String = agreement_draft.name
+	var intention: String = agreement_draft.intention
+	if seed_name.strip_edges().is_empty(): return
+	screen = "loading"
+	_request("update_agreement", {"pair_id": state.pair.id, "expected_agreement_version": int(current.version),
+		"name": seed_name, "intention": intention}, "agreement")
+
+func approve_agreement() -> void:
+	var current := agreement()
+	if busy or screen != "agreement" or current.is_empty() or current.name.is_empty() or current.own_approved:
+		return
+	screen = "loading"
+	_request("approve_agreement", {"pair_id": state.pair.id, "agreement_version": int(current.version)}, "agreement")
+
 func retry() -> void:
 	if busy: return
 	if _retry_screen == "loading":
 		start()
+	elif _retry_screen in ["agreement", "agreement_edit"]:
+		refresh_agreement()
 	elif _operation in ["submit_selection", "reopen_selection"]:
 		continue_to_qualities()
 	elif error == "storage":
@@ -301,6 +344,11 @@ func _completed(id: int, result: Dictionary) -> void:
 	busy = false
 	if not result.get("ok", false):
 		var reason := str(result.get("error", "unavailable"))
+		if reason == "invalid_agreement" and _operation == "update_agreement":
+			error = reason
+			screen = "agreement_edit"
+			changed.emit()
+			return
 		_fail(reason, _retry_screen)
 		return
 	match _operation:
@@ -326,9 +374,18 @@ func _completed(id: int, result: Dictionary) -> void:
 					_restore_private_draft(catalog)
 					navigate("selection")
 				"waiting": navigate("selection_waiting")
-				"revealed": navigate("selection_revealed")
+				"revealed":
+					var current := agreement()
+					if _retry_screen == "agreement_edit" and not current.is_empty() and agreement_draft.get("version") == current.version:
+						navigate("agreement_edit")
+					elif _retry_screen in ["agreement", "agreement_edit"] and not current.is_empty():
+						navigate("agreement")
+					else:
+						navigate("selection_revealed")
 		"submit_selection", "reopen_selection":
 			continue_to_qualities()
+		"update_agreement", "approve_agreement":
+			refresh_agreement()
 		"send_code": navigate("verify")
 		"logout":
 			_discard_account_state()
@@ -402,6 +459,7 @@ func _fail(reason: String, origin: String) -> void:
 		invitation_view = {}
 	selection_base_revision = -1
 	selection_view.clear()
+	agreement_draft.clear()
 	if not is_demo(): state.selection.clear()
 	error = reason
 	_retry_screen = origin

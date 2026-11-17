@@ -14,9 +14,9 @@ Android es la plataforma en desarrollo y verificación, con Samsung y computador
 
 ## Dónde estamos
 
-Tenemos una aplicación instalable en Android, un catálogo y jardín de demostración, acceso real por código de correo y un vínculo bilateral confirmado contra Supabase. **Todavía no tenemos el recorrido completo del MVP:** las elecciones compartidas, el acuerdo, la siembra y el crecimiento reales están pendientes.
+La aplicación Android tiene acceso por código de correo, vínculo bilateral, selección privada y revelación con Supabase de desarrollo. El acuerdo compartido está validado con backend local en el emulador. Los siguientes hitos son la siembra y el primer brote.
 
-La sesión segura de Android está implementada y probada en el emulador con respuestas de red controladas. Falta repetir la recuperación del vínculo principal y la validación de sesión contra Supabase de desarrollo. Después continúa la selección privada y la revelación con consentimiento bilateral.
+La sesión segura de Android se probó en el emulador contra Supabase de desarrollo con cuentas sintéticas. Queda por repetir la recuperación con la cuenta principal del registro histórico.
 
 El refinamiento autónomo del 4 de octubre corrigió recuperación de errores, respuestas tardías, asociación de códigos de invitación, validación de sesión y conservación del formulario/texto aumentado. Pasaron 1347 pruebas de código y 33 comprobaciones del recorrido visual en escritorio. Android emulado conserva cuatro fallos visuales; el Samsung estaba bloqueado. Ver [autoexploración](AUTOEXPLORACION.md). Estos resultados no cierran la validación móvil ni el acceso real tras reabrir.
 
@@ -45,7 +45,7 @@ Estos identificadores son propios del seguimiento. Los puntos «1 y 2» de nuest
 | MVP-01 | Validación móvil y decisión del motor | En desarrollo | APK, HTTPS, teclado y navegación comprobados parcialmente. TalkBack sigue sin exponer los controles de la versión principal en el emulador. El gesto autenticado pasó con una cuenta sintética en el emulador. Faltan mediciones y accesibilidad completa. |
 | MVP-02 | Cuentas y vínculo bilateral real | Por validar | Vínculo confirmado históricamente. Sesión segura verificada con datos de prueba en el emulador. Reapertura y sesión verificadas contra el servicio alojado con cuentas sintéticas. La cuenta principal histórica queda pendiente. |
 | MVP-03 | Selección privada y revelación bilateral | Validado en desarrollo | 9 de 9 casos aprobados en Android emulado con backend local. El borrador, la espera, la revelación y la reapertura también se verificaron previamente contra Supabase de desarrollo. |
-| MVP-04 | Acuerdo y receta compartida | Pendiente | Mezcla visual local de prueba; faltan receta autorizada y aprobaciones por versión. |
+| MVP-04 | Acuerdo y receta compartida | Validado en desarrollo local | Receta del servidor, edición y aprobación bilateral por versión verificadas en Android emulado. Falta aplicar y probar las migraciones de M4 en Supabase de desarrollo. |
 | MVP-05 | Siembra única y primer brote | Pendiente | Semilla y brote visuales de demo; faltan transacción, tiempo de servidor e hito real. |
 | MVP-06 | Salida, eliminación y recuperación | Pendiente | Cierre de sesión y algunos errores de red implementados; faltan desvinculación y eliminación real. |
 | MVP-07 | Piloto del recorrido completo | Pendiente | Requiere objetivos anteriores, privacidad, comprensión y calidad móvil validadas. |
@@ -116,13 +116,28 @@ Cierre: las dos cuentas comparten y recuperan elecciones reales sin filtrarlas a
 
 ### MVP-04 · Acuerdo y receta
 
-- [ ] Generar en el servidor una receta determinista que conserve los aportes equivalentes de ambos integrantes.
-- [ ] Representar la misma identidad de semilla en ambos clientes, con explicación textual.
-- [ ] Guardar nombre, intención y versión del acuerdo.
-- [ ] Registrar dos aprobaciones explícitas sobre la misma versión.
-- [ ] Invalidar aprobaciones afectadas al editar y rechazar versiones antiguas.
+- [x] Generar en el servidor una receta determinista que conserve los aportes equivalentes de ambos integrantes.
+- [x] Representar la misma identidad de semilla en ambos clientes, con explicación textual.
+- [x] Guardar nombre, intención y versión del acuerdo.
+- [x] Registrar dos aprobaciones explícitas sobre la misma versión.
+- [x] Invalidar aprobaciones afectadas al editar y rechazar versiones antiguas.
 
-Cierre: ambos ven la misma receta y aprueban la misma versión; una aprobación antigua o de una cuenta externa se rechaza. El arte final debe respetar el mapa de cualidades, accesibilidad y presupuesto móvil.
+El 17 de noviembre se aprobaron ocho casos de extremo a extremo con dos clientes en `AppParejas_API_35` y sesiones sintéticas. El backend aislado ejecutó las migraciones del repositorio en PostgreSQL 17 y las RPC mediante PostgREST. El APK de prueba usó la escena principal y el transporte HTTPS con un certificado de prueba.
+
+| Caso | Resultado |
+| --- | --- |
+| M4-01 | La receta y el acuerdo permanecen privados hasta el segundo consentimiento. |
+| M4-02 | Ambos clientes reciben la misma identidad y renderizan la semilla con la receta del servidor. |
+| M4-03 | La aprobación exige un nombre. Cuando el servidor rechaza el texto, el formulario conserva lo escrito. |
+| M4-04 | Consultar después de perder una respuesta recupera el nombre, la intención y una sola versión. |
+| M4-05 | Cada integrante ve quién aprobó. Ambas aprobaciones se registran en la misma versión. |
+| M4-06 | Una edición retira las aprobaciones. Una versión obsoleta se rechaza y dos aprobaciones concurrentes de la versión vigente se registran. |
+| M4-07 | Una cuenta externa queda fuera de la lectura y la aprobación. |
+| M4-08 | Reabrir elecciones oculta el acuerdo y recupera ambos borradores privados. Una nueva revelación crea un acuerdo sin nombre ni aprobaciones. |
+
+Pasaron la [suite SQL de M4](../backend/tests/mvp04_agreement.sql), las regresiones SQL de M3 y la migración de un vínculo previamente revelado. El servidor normaliza el texto y cuenta grafemas según Unicode 17. La prueba de conformidad verificó 692 casos representables en PostgreSQL. [Unicode Text Segmentation](https://www.unicode.org/reports/tr29/)
+
+Evidencia local en `.artifacts/m4-acceptance/`: `emulator.log`, `backend.log`, `upgrade.log` y `acuerdo-aprobado.png`. El APK separado verifica el flujo con datos de prueba y el arte provisional de Godot. La siembra corresponde a MVP-05.
 
 ### MVP-05 · Siembra y primer brote
 
@@ -195,6 +210,7 @@ Para iniciar un bloque, tomar la primera prioridad pendiente, consultar su contr
 | 2026-10-04 | MVP-01 | Samsung desbloqueado: 33 comprobaciones sin fallos; gesto en jardín demo y brote mediante toque. Corrección de ancho al 200%, con 1349 pruebas de código sin fallos. | Gesto autenticado, sesión segura, reapertura real y TalkBack completo pendientes; fallos del emulador aún por resolver. |
 | 2026-11-06 | MVP-01 / MVP-02 | Keystore y reaperturas con sesión de prueba en Android emulado. PostgreSQL local y recorrido bilateral local aprobados. TalkBack activo sin controles con nombre. | Supabase restaurado. Casos negativos aprobados en SQL alojado con rollback. APK conectado visible con GPU del host. Reingreso, OTP sintético y reconexión aprobados contra Supabase desde Android emulado. Pendientes la cuenta principal histórica y la accesibilidad. Prueba física diferida por preferencia del usuario. |
 | 2026-11-17 | MVP-03 | 9 de 9 casos aprobados en Android emulado con backend local y sesiones sintéticas. Evidencia por caso en [M3](MVP_03.md). | MVP-04, acuerdo y receta compartida. |
+| 2026-11-17 | MVP-04 | Ocho casos aprobados en Android emulado con el backend local, incluidas edición, aprobación concurrente y reapertura. | Aplicar y validar M4 en Supabase de desarrollo. La siembra corresponde a MVP-05. |
 
 ## Documentos de referencia
 
