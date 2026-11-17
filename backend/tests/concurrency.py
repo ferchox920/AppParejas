@@ -5,13 +5,12 @@ import subprocess
 import sys
 import uuid
 
-psql, database, port = sys.argv[1:]
+database, *psql = sys.argv[1:]
 assert database.startswith('appparejas_checks_')
 
 def query(sql):
-    result = subprocess.run([psql, '-X', '-qAt', '-h', '127.0.0.1', '-p', port,
-                             '-U', 'appparejas_test', '-d', database, '-v', 'ON_ERROR_STOP=1'],
-                            input=sql, capture_output=True, text=True, check=True)
+    result = subprocess.run([*psql, '-X', '-qAt', '-d', database, '-v', 'ON_ERROR_STOP=1'],
+                            input=sql, stdout=subprocess.PIPE, text=True, check=True, timeout=30)
     return result.stdout.strip().splitlines()[-1]
 
 def actor_query(actor, sql):
