@@ -14,7 +14,7 @@ Android es la plataforma en desarrollo y verificación, con Samsung y computador
 
 ## Dónde estamos
 
-La aplicación Android tiene acceso por código de correo, vínculo bilateral, selección privada y revelación con Supabase de desarrollo. El acuerdo, la siembra y el primer brote están validados con backend local en el emulador. Quedan por comprobar en Supabase de desarrollo.
+La aplicación Android tiene acceso por código de correo, vínculo bilateral, selección privada y revelación con Supabase de desarrollo. El acuerdo, la siembra y el primer brote se validaron en el emulador contra Supabase de desarrollo.
 
 La sesión segura de Android se probó en el emulador contra Supabase de desarrollo con cuentas sintéticas. Queda por repetir la recuperación con la cuenta principal del registro histórico.
 
@@ -45,8 +45,8 @@ Estos identificadores son propios del seguimiento. Los puntos «1 y 2» de nuest
 | MVP-01 | Validación móvil y decisión del motor | En desarrollo | APK, HTTPS, teclado y navegación comprobados parcialmente. TalkBack sigue sin exponer los controles de la versión principal en el emulador. El gesto autenticado pasó con una cuenta sintética en el emulador. Faltan mediciones y accesibilidad completa. |
 | MVP-02 | Cuentas y vínculo bilateral real | Por validar | Vínculo confirmado históricamente. Sesión segura verificada con datos de prueba en el emulador. Reapertura y sesión verificadas contra el servicio alojado con cuentas sintéticas. La cuenta principal histórica queda pendiente. |
 | MVP-03 | Selección privada y revelación bilateral | Validado en desarrollo | 9 de 9 casos aprobados en Android emulado con backend local. El borrador, la espera, la revelación y la reapertura también se verificaron previamente contra Supabase de desarrollo. |
-| MVP-04 | Acuerdo y receta compartida | Validado en desarrollo local | Receta del servidor, edición y aprobación bilateral por versión verificadas en Android emulado. Falta aplicar y probar las migraciones de M4 en Supabase de desarrollo. |
-| MVP-05 | Siembra única y primer brote | Validado en desarrollo local | Confirmación bilateral, cultivo único y brote a las 168 horas verificados en Android emulado. Falta aplicar y probar M4 y M5 en Supabase de desarrollo. |
+| MVP-04 | Acuerdo y receta compartida | Validado en Supabase de desarrollo | Dos cuentas en Android emulado recuperaron la misma receta, editaron el acuerdo y aprobaron la versión vigente. |
+| MVP-05 | Siembra única y primer brote | Validado en Supabase de desarrollo | Android emulado confirmó la siembra bilateral, recuperó un solo cultivo y registró un solo brote con presentación por persona. |
 | MVP-06 | Salida, eliminación y recuperación | Pendiente | Cierre de sesión y algunos errores de red implementados; faltan desvinculación y eliminación real. |
 | MVP-07 | Piloto del recorrido completo | Pendiente | Requiere objetivos anteriores, privacidad, comprensión y calidad móvil validadas. |
 
@@ -165,6 +165,14 @@ La [suite SQL de M5](../backend/tests/mvp05_cultivation.sql) verificó el paso d
 
 Evidencia local en `.artifacts/m5-acceptance/` con los registros `emulator-plant.log`, `clock-test.log`, `emulator-sprout.log`, `counts.log` y las capturas `semilla.png` y `brote.png`.
 
+#### Validación de MVP-04 y MVP-05 en Supabase de desarrollo
+
+El 17 de noviembre se aplicaron en `AppParejas-desarrollo` `202611170000_grapheme_count`, `202611170001_shared_agreement` y `202611170002_shared_cultivation`. El despliegue comprobó el historial remoto de MVP-03, pasó ambas suites SQL y revirtió los datos sintéticos de esas suites antes de confirmar la transacción.
+
+En `AppParejas_API_35` se comprobaron diez resultados con sesiones emitidas por Supabase Auth. Dos cuentas recuperaron la misma receta, editaron y aprobaron el acuerdo, retiraron una confirmación y sembraron concurrentemente. En la segunda fase se ajustó el vencimiento de un cultivo creado para la prueba. Tras cerrar y reabrir la app, el emulador recuperó ese cultivo desde Keystore y mostró el primer brote. El indicador de visto fue individual y una tercera cuenta quedó fuera. La consulta final registró **un cultivo y un brote**.
+
+Evidencia local en `.artifacts/m4-m5-hosted/` con la captura `migraciones-supabase.jpg`, los registros `emulator-plant.log` y `emulator-sprout.log`, y la captura `brote-supabase.png`.
+
 ### MVP-06 · Salida y recuperación
 
 - [ ] Permitir desvinculación unilateral y revocar el acceso cruzado en el servidor.
@@ -225,8 +233,9 @@ Para iniciar un bloque, tomar la primera prioridad pendiente, consultar su contr
 | 2026-10-04 | MVP-01 | Samsung desbloqueado: 33 comprobaciones sin fallos; gesto en jardín demo y brote mediante toque. Corrección de ancho al 200%, con 1349 pruebas de código sin fallos. | Gesto autenticado, sesión segura, reapertura real y TalkBack completo pendientes; fallos del emulador aún por resolver. |
 | 2026-11-06 | MVP-01 / MVP-02 | Keystore y reaperturas con sesión de prueba en Android emulado. PostgreSQL local y recorrido bilateral local aprobados. TalkBack activo sin controles con nombre. | Supabase restaurado. Casos negativos aprobados en SQL alojado con rollback. APK conectado visible con GPU del host. Reingreso, OTP sintético y reconexión aprobados contra Supabase desde Android emulado. Pendientes la cuenta principal histórica y la accesibilidad. Prueba física diferida por preferencia del usuario. |
 | 2026-11-17 | MVP-03 | 9 de 9 casos aprobados en Android emulado con backend local y sesiones sintéticas. Evidencia por caso en [M3](MVP_03.md). | MVP-04, acuerdo y receta compartida. |
-| 2026-11-17 | MVP-04 | Ocho casos aprobados en Android emulado con el backend local, incluidas edición, aprobación concurrente y reapertura. | Aplicar y validar M4 en Supabase de desarrollo. La siembra corresponde a MVP-05. |
-| 2026-11-17 | MVP-05 | Ocho casos aprobados en Android emulado con backend local. Confirmaciones concurrentes, un cultivo, un brote y presentación individual verificados. | Aplicar y validar M4 y M5 en Supabase de desarrollo. La desvinculación y eliminación corresponden a MVP-06. |
+| 2026-11-17 | MVP-04 | Ocho casos aprobados en Android emulado con el backend local, incluidas edición, aprobación concurrente y reapertura. | Validación alojada registrada en la fila siguiente a MVP-05. |
+| 2026-11-17 | MVP-05 | Ocho casos aprobados en Android emulado con backend local. Confirmaciones concurrentes, un cultivo, un brote y presentación individual verificados. | Validación alojada registrada en la fila siguiente. |
+| 2026-11-17 | MVP-04 / MVP-05 | Tres migraciones aplicadas en AppParejas-desarrollo. Suites SQL y diez comprobaciones en el emulador aprobadas. | MVP-06, desvinculación y eliminación de cuenta. |
 
 ## Documentos de referencia
 

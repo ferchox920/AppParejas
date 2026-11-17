@@ -44,9 +44,9 @@ La experiencia combina una interfaz cálida, un catálogo de veinte cualidades y
 | Vínculo bilateral | Invitaciones autenticadas; creación, consulta, revisión, aceptación y cancelación |
 | Demostración del jardín | Selección local de 3–5 cualidades, mezcla de ejemplo, semilla y brote 3D |
 | Accesibilidad | Texto ampliado, movimiento reducido y comprobaciones de disposición; TalkBack sigue pendiente en la versión principal |
-| Selección y acuerdo | Selección privada y revelación bilateral en desarrollo. Receta del servidor, acuerdo y aprobaciones por versión verificados con backend local |
-| Jardín compartido | Siembra bilateral y primer brote a las 168 horas verificados con backend local |
-| Próximos bloques | Validación del acuerdo y el jardín en Supabase de desarrollo, desvinculación y eliminación de cuenta |
+| Selección y acuerdo | Selección privada y revelación bilateral en desarrollo. Receta del servidor, acuerdo y aprobaciones por versión verificados en Supabase de desarrollo |
+| Jardín compartido | Siembra bilateral y primer brote verificados en Supabase de desarrollo |
+| Próximos bloques | Desvinculación y eliminación de cuenta |
 
 **El MVP está en desarrollo.** Las cuentas y el vínculo real cuentan con evidencia de pruebas previas en escritorio y Android. Las capturas anteriores muestran la demostración local del jardín. Android conserva la sesión cifrada con Keystore y recupera el vínculo desde el servidor.
 
