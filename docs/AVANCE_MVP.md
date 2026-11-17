@@ -14,7 +14,7 @@ Android es la plataforma en desarrollo y verificación, con Samsung y computador
 
 ## Dónde estamos
 
-La aplicación Android tiene acceso por código de correo, vínculo bilateral, selección privada y revelación con Supabase de desarrollo. El acuerdo compartido está validado con backend local en el emulador. Los siguientes hitos son la siembra y el primer brote.
+La aplicación Android tiene acceso por código de correo, vínculo bilateral, selección privada y revelación con Supabase de desarrollo. El acuerdo, la siembra y el primer brote están validados con backend local en el emulador. Quedan por comprobar en Supabase de desarrollo.
 
 La sesión segura de Android se probó en el emulador contra Supabase de desarrollo con cuentas sintéticas. Queda por repetir la recuperación con la cuenta principal del registro histórico.
 
@@ -46,7 +46,7 @@ Estos identificadores son propios del seguimiento. Los puntos «1 y 2» de nuest
 | MVP-02 | Cuentas y vínculo bilateral real | Por validar | Vínculo confirmado históricamente. Sesión segura verificada con datos de prueba en el emulador. Reapertura y sesión verificadas contra el servicio alojado con cuentas sintéticas. La cuenta principal histórica queda pendiente. |
 | MVP-03 | Selección privada y revelación bilateral | Validado en desarrollo | 9 de 9 casos aprobados en Android emulado con backend local. El borrador, la espera, la revelación y la reapertura también se verificaron previamente contra Supabase de desarrollo. |
 | MVP-04 | Acuerdo y receta compartida | Validado en desarrollo local | Receta del servidor, edición y aprobación bilateral por versión verificadas en Android emulado. Falta aplicar y probar las migraciones de M4 en Supabase de desarrollo. |
-| MVP-05 | Siembra única y primer brote | Pendiente | Semilla y brote visuales de demo; faltan transacción, tiempo de servidor e hito real. |
+| MVP-05 | Siembra única y primer brote | Validado en desarrollo local | Confirmación bilateral, cultivo único y brote a las 168 horas verificados en Android emulado. Falta aplicar y probar M4 y M5 en Supabase de desarrollo. |
 | MVP-06 | Salida, eliminación y recuperación | Pendiente | Cierre de sesión y algunos errores de red implementados; faltan desvinculación y eliminación real. |
 | MVP-07 | Piloto del recorrido completo | Pendiente | Requiere objetivos anteriores, privacidad, comprensión y calidad móvil validadas. |
 
@@ -141,14 +141,29 @@ Evidencia local en `.artifacts/m4-acceptance/`: `emulator.log`, `backend.log`, `
 
 ### MVP-05 · Siembra y primer brote
 
-- [ ] Registrar confirmaciones de siembra explícitas de ambas personas sobre el acuerdo vigente.
-- [ ] Crear un único cultivo mediante una transacción del servidor, incluso con reintentos y concurrencia.
-- [ ] Guardar receta y acuerdo inmutables después de sembrar.
-- [ ] Determinar el primer brote con tiempo de servidor: 168 horas desde la siembra.
-- [ ] Recuperar jardín y etapa en ambos clientes sin depender del reloj del teléfono.
-- [ ] Registrar por persona la presentación del hito, sin modificar el crecimiento.
+- [x] Registrar confirmaciones de siembra explícitas de ambas personas sobre el acuerdo vigente.
+- [x] Crear un único cultivo mediante una transacción del servidor, incluso con reintentos y concurrencia.
+- [x] Guardar receta y acuerdo inmutables después de sembrar.
+- [x] Determinar el primer brote con tiempo de servidor: 168 horas desde la siembra.
+- [x] Recuperar jardín y etapa en ambos clientes sin depender del reloj del teléfono.
+- [x] Registrar por persona la presentación del hito, sin modificar el crecimiento.
 
-Cierre: una siembra real y el mismo primer brote se recuperan entre clientes. Probar el plazo con un reloj o entorno de prueba controlado; no agregar una aceleración pública del cultivo.
+El 17 de noviembre se aprobaron ocho casos en `AppParejas_API_35` con dos sesiones sintéticas y PostgreSQL 17/PostgREST aislados.
+
+| Caso | Resultado |
+| --- | --- |
+| M5-01 | La siembra exige dos aprobaciones sobre la versión vigente antes de aceptar confirmaciones. |
+| M5-02 | Perder una respuesta HTTPS y consultar recupera la confirmación registrada. Una sola confirmación deja la siembra pendiente. |
+| M5-03 | Se puede retirar y volver a confirmar antes de sembrar. Una edición invalida las confirmaciones de la versión previa. |
+| M5-04 | Dos confirmaciones concurrentes crean un único cultivo. Los reenvíos recuperan el mismo identificador. |
+| M5-05 | El cultivo congela el nombre, la intención, la receta y la versión. Se bloquean la edición, la reapertura de las elecciones y la retirada de la siembra. |
+| M5-06 | Al reabrir con la sesión de Keystore y el reloj del emulador adelantado ocho días, la app recupera el mismo cultivo en etapa semilla. Se restauró el reloj del emulador al terminar. |
+| M5-07 | Al vencer el plazo de servidor, consultas concurrentes recuperan el mismo primer brote. Marcarlo como visto sólo afecta a quien lo marcó. |
+| M5-08 | Una cuenta ajena queda fuera del jardín y del registro de presentación. |
+
+La [suite SQL de M5](../backend/tests/mvp05_cultivation.sql) verificó el paso de semilla a brote en el límite de las 168 horas. Para repetir la transición en Android se ajustaron las fechas del cultivo en la base desechable. La app consulta al servidor al reabrir, al volver a primer plano y al actualizar el jardín.
+
+Evidencia local en `.artifacts/m5-acceptance/` con los registros `emulator-plant.log`, `clock-test.log`, `emulator-sprout.log`, `counts.log` y las capturas `semilla.png` y `brote.png`.
 
 ### MVP-06 · Salida y recuperación
 
@@ -211,6 +226,7 @@ Para iniciar un bloque, tomar la primera prioridad pendiente, consultar su contr
 | 2026-11-06 | MVP-01 / MVP-02 | Keystore y reaperturas con sesión de prueba en Android emulado. PostgreSQL local y recorrido bilateral local aprobados. TalkBack activo sin controles con nombre. | Supabase restaurado. Casos negativos aprobados en SQL alojado con rollback. APK conectado visible con GPU del host. Reingreso, OTP sintético y reconexión aprobados contra Supabase desde Android emulado. Pendientes la cuenta principal histórica y la accesibilidad. Prueba física diferida por preferencia del usuario. |
 | 2026-11-17 | MVP-03 | 9 de 9 casos aprobados en Android emulado con backend local y sesiones sintéticas. Evidencia por caso en [M3](MVP_03.md). | MVP-04, acuerdo y receta compartida. |
 | 2026-11-17 | MVP-04 | Ocho casos aprobados en Android emulado con el backend local, incluidas edición, aprobación concurrente y reapertura. | Aplicar y validar M4 en Supabase de desarrollo. La siembra corresponde a MVP-05. |
+| 2026-11-17 | MVP-05 | Ocho casos aprobados en Android emulado con backend local. Confirmaciones concurrentes, un cultivo, un brote y presentación individual verificados. | Aplicar y validar M4 y M5 en Supabase de desarrollo. La desvinculación y eliminación corresponden a MVP-06. |
 
 ## Documentos de referencia
 

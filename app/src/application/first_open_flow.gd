@@ -66,7 +66,8 @@ func _bootstrap() -> void:
 func navigate(next: String) -> void:
 	if busy: return
 	error = ""
-	if next not in ["selection", "selection_waiting", "selection_revealed", "agreement", "agreement_edit"]:
+	if next not in ["selection", "selection_waiting", "selection_revealed", "agreement", "agreement_edit",
+		"planting", "shared_garden"]:
 		selection_view.clear()
 	if next != "agreement_edit": agreement_draft.clear()
 	if next != "selection":
@@ -244,12 +245,59 @@ func approve_agreement() -> void:
 	screen = "loading"
 	_request("approve_agreement", {"pair_id": state.pair.id, "agreement_version": int(current.version)}, "agreement")
 
+func planting() -> Dictionary:
+	var current := agreement()
+	var flags: Variant = selection_view.get("planting")
+	if current.is_empty() or not (current.own_approved and current.partner_approved) or not flags is Dictionary:
+		return {}
+	return flags
+
+func cultivation() -> Dictionary:
+	var value: Variant = selection_view.get("cultivation")
+	if not value is Dictionary or not value.get("recipe") is Dictionary: return {}
+	if value.get("stage") not in ["seed", "sprout"] or not value.get("id") is String: return {}
+	return value
+
+func refresh_planting() -> void:
+	_refresh_shared_space("planting")
+
+func refresh_shared_garden() -> void:
+	_refresh_shared_space("shared_garden")
+
+func _refresh_shared_space(destination: String) -> void:
+	if busy or is_demo() or not state.has_pair(): return
+	screen = "loading"
+	_request("pair_state", {"pair_id": state.pair.id}, destination)
+
+func confirm_planting() -> void:
+	_change_planting(true)
+
+func withdraw_planting() -> void:
+	_change_planting(false)
+
+func _change_planting(confirm: bool) -> void:
+	var flags := planting()
+	if busy or screen != "planting" or flags.is_empty() or flags.own_confirmed == confirm:
+		return
+	screen = "loading"
+	_request("confirm_planting" if confirm else "withdraw_planting",
+		{"pair_id": state.pair.id, "agreement_version": int(agreement().version)}, "planting")
+
+func mark_sprout_seen() -> void:
+	var milestone: Variant = cultivation().get("first_sprout")
+	if busy or screen != "shared_garden" or not milestone is Dictionary or milestone.own_seen:
+		return
+	screen = "loading"
+	_request("mark_milestone_seen", {"pair_id": state.pair.id, "milestone_id": milestone.id}, "shared_garden")
+
 func retry() -> void:
 	if busy: return
 	if _retry_screen == "loading":
 		start()
 	elif _retry_screen in ["agreement", "agreement_edit"]:
 		refresh_agreement()
+	elif _retry_screen in ["planting", "shared_garden"]:
+		_refresh_shared_space(_retry_screen)
 	elif _operation in ["submit_selection", "reopen_selection"]:
 		continue_to_qualities()
 	elif error == "storage":
@@ -361,11 +409,16 @@ func _completed(id: int, result: Dictionary) -> void:
 			if revision < 0 or revision > 2147483647 or revision != floorf(revision):
 				_fail("selection_unavailable", "confirmed")
 				return
+			selection_view = result
+			if not cultivation().is_empty():
+				state.pair.cultivation_available = true
+				navigate("shared_garden")
+				return
+			state.pair.erase("cultivation_available")
 			var catalog := QualityCatalog.load_catalog()
 			if result.get("catalog_version") != catalog.get("catalog_version"):
 				_fail("catalog_outdated", "confirmed")
 				return
-			selection_view = result
 			selection_view.pair_revision = int(revision)
 			selection_base_revision = int(revision)
 			_selection_catalog_version = int(catalog.catalog_version)
@@ -378,7 +431,9 @@ func _completed(id: int, result: Dictionary) -> void:
 					var current := agreement()
 					if _retry_screen == "agreement_edit" and not current.is_empty() and agreement_draft.get("version") == current.version:
 						navigate("agreement_edit")
-					elif _retry_screen in ["agreement", "agreement_edit"] and not current.is_empty():
+					elif _retry_screen == "planting" and not planting().is_empty():
+						navigate("planting")
+					elif _retry_screen in ["agreement", "agreement_edit", "planting"] and not current.is_empty():
 						navigate("agreement")
 					else:
 						navigate("selection_revealed")
@@ -386,6 +441,10 @@ func _completed(id: int, result: Dictionary) -> void:
 			continue_to_qualities()
 		"update_agreement", "approve_agreement":
 			refresh_agreement()
+		"confirm_planting", "withdraw_planting":
+			refresh_planting()
+		"mark_milestone_seen":
+			refresh_shared_garden()
 		"send_code": navigate("verify")
 		"logout":
 			_discard_account_state()
@@ -410,6 +469,8 @@ func _completed(id: int, result: Dictionary) -> void:
 			if not _persist(): return
 			if not str(state.invitation.pending_reference).is_empty() and state.has_session():
 				_resolve()
+			elif not is_demo() and state.has_pair() and state.pair.get("cultivation_available") == true:
+				refresh_shared_garden()
 			elif not is_demo() and not state.has_session() and state.introduction != "new": navigate("access")
 			elif not is_demo() and _operation == "status" and _retry_screen == "access" and state.invitation.action == "invite" and state.has_session() and not state.has_pair() and str(state.invitation.outgoing_id).is_empty(): connect_route("invite")
 			else: navigate(state.route())

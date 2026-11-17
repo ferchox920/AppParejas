@@ -87,19 +87,26 @@ func _execute(operation: String, payload: Dictionary, request_id: int, generatio
 		result = {"ok": true} if cleared else {"ok": false, "error": "session_storage"}
 	elif operation == "bootstrap" and _refresh_token.is_empty():
 		result = {"ok": true}
-	elif operation in ["bootstrap", "status", "create", "resolve", "accept", "cancel", "pair_state", "submit_selection", "reopen_selection", "update_agreement", "approve_agreement"]:
+	elif operation in ["bootstrap", "status", "create", "resolve", "accept", "cancel", "pair_state",
+		"submit_selection", "reopen_selection", "update_agreement", "approve_agreement",
+		"confirm_planting", "withdraw_planting", "mark_milestone_seen"]:
 		result = await _ensure_session()
 		if result.ok and generation == _generation:
 			match operation:
 				"bootstrap", "status": result = await _rpc("get_connection_state", {})
 				"pair_state": result = await _rpc("get_pair_state", {"pair_id": payload.pair_id})
+				"mark_milestone_seen": result = await _rpc(operation, payload)
+				"confirm_planting", "withdraw_planting":
+					# Una nueva confirmación tras retirarla puede tener la misma versión y otros efectos.
+					payload.operation_id = _new_operation_id()
+					result = await _rpc(operation, payload)
 				"submit_selection", "reopen_selection", "update_agreement", "approve_agreement":
 					var key := operation + ":" + JSON.stringify(payload)
 					payload.operation_id = _operation_id(key)
 					result = await _rpc(operation, payload)
 					if generation == _generation and (result.ok or result.get("error") in [
 						"version_conflict", "validation_failed", "operation_conflict", "pair_unavailable",
-						"agreement_version_conflict", "agreement_unavailable", "invalid_agreement"
+						"agreement_version_conflict", "agreement_unavailable", "invalid_agreement", "cultivation_locked"
 					]):
 						_operation_ids.erase(key)
 				"create":
@@ -143,9 +150,12 @@ func verification_payload(value: String) -> Dictionary:
 
 func _operation_id(key: String) -> String:
 	if not _operation_ids.has(key):
-		var raw := Crypto.new().generate_random_bytes(16).hex_encode()
-		_operation_ids[key] = "%s-%s-%s-%s-%s" % [raw.substr(0, 8), raw.substr(8, 4), raw.substr(12, 4), raw.substr(16, 4), raw.substr(20, 12)]
+		_operation_ids[key] = _new_operation_id()
 	return _operation_ids[key]
+
+func _new_operation_id() -> String:
+	var raw := Crypto.new().generate_random_bytes(16).hex_encode()
+	return "%s-%s-%s-%s-%s" % [raw.substr(0, 8), raw.substr(8, 4), raw.substr(12, 4), raw.substr(16, 4), raw.substr(20, 12)]
 
 func _ensure_session() -> Dictionary:
 	var generation := _generation

@@ -30,6 +30,8 @@ func _ready() -> void:
 		"selection_waiting", "selection_revealed": _shared_selection()
 		"agreement": _agreement()
 		"agreement_edit": _edit_agreement()
+		"planting": _planting()
+		"shared_garden": _shared_garden()
 		"error": _error()
 	_status = _label("", 14, AppTheme.MUTED)
 	_status.name = "Status"
@@ -238,7 +240,10 @@ func _confirmed() -> void:
 	if not flow.is_demo():
 		_title("Sus espacios están conectados")
 		_label("El vínculo entre las dos cuentas está confirmado y guardado. Podés cerrar y volver a entrar para recuperarlo.")
-		_button("Ver mis elecciones", "ContinueQualities", func() -> void: flow.continue_to_qualities())
+		if flow.state.pair.get("cultivation_available") == true:
+			_button("Ver jardín compartido", "ContinueGarden", flow.refresh_shared_garden)
+		else:
+			_button("Ver mis elecciones", "ContinueQualities", flow.continue_to_qualities)
 		return
 	_title("El espacio de ejemplo está conectado")
 	_label("Vínculo de demostración confirmado. No conecta dos cuentas ni dos teléfonos reales.")
@@ -289,6 +294,8 @@ func _agreement() -> void:
 	_label("La mitad de los aportes viene de cada persona. Todas las cualidades elegidas quedan representadas.")
 	if not own and not current.name.is_empty():
 		_button("Aprobar esta versión", "ApproveAgreement", flow.approve_agreement)
+	if not flow.planting().is_empty():
+		_button("Preparar siembra", "OpenPlanting", flow.refresh_planting)
 	_button("Editar nombre e intención", "EditAgreement", flow.edit_agreement, true)
 	_button("Actualizar acuerdo", "RefreshAgreement", flow.refresh_agreement, true)
 	_button("Volver a las elecciones", "ReturnToSelection", func() -> void: flow.navigate("selection_revealed"), true)
@@ -315,6 +322,44 @@ func _edit_agreement() -> void:
 	intention.text_changed.connect(func(value: String) -> void: flow.agreement_draft.intention = value)
 	_button("Cancelar", "CancelAgreement", func() -> void: flow.navigate("agreement"), true)
 
+func _planting() -> void:
+	var current := flow.agreement()
+	var flags := flow.planting()
+	_title("Siembra compartida")
+	_card("Semilla", current.name)
+	_label("Acuerdo aprobado · versión %d" % int(current.version), 14, AppTheme.MUTED)
+	_label("La siembra empieza cuando ambos confirman. Desde ese momento, el acuerdo queda guardado con el cultivo.")
+	if flags.own_confirmed:
+		_label("Ya confirmaste. Falta la confirmación de tu pareja.", 16, AppTheme.FOREST)
+		_button("Retirar mi confirmación", "WithdrawPlanting", flow.withdraw_planting, true)
+	else:
+		if flags.partner_confirmed: _label("Tu pareja ya confirmó la siembra.", 16, AppTheme.FOREST)
+		_button("Confirmar que quiero sembrar", "ConfirmPlanting", flow.confirm_planting)
+	_button("Consultar estado", "RefreshPlanting", flow.refresh_planting, true)
+	_button("Volver al acuerdo", "ReturnToAgreement", func() -> void: flow.navigate("agreement"), true)
+
+func _shared_garden() -> void:
+	var current := flow.cultivation()
+	var sprouted: bool = current.stage == "sprout"
+	_title(current.name)
+	if not current.intention.is_empty(): _label(current.intention)
+	_label("Primer brote" if sprouted else "Semilla sembrada", 20, AppTheme.FOREST)
+	if not sprouted:
+		_label("El primer brote aparece siete días después de sembrar.", 16, AppTheme.MUTED)
+	var seed := GardenView.new()
+	seed.name = "SharedGarden"
+	seed.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	seed.reduced_motion = bool(flow.state.preferences.reduced_motion)
+	seed.show_recipe(current.recipe, current.stage)
+	add_child(seed)
+	var milestone: Variant = current.get("first_sprout")
+	if milestone is Dictionary and not milestone.get("own_seen", false):
+		_button("Marcar brote como visto", "MarkSproutSeen", flow.mark_sprout_seen)
+	var ids: Array = current.recipe.get("selected_union", [])
+	_card("Cualidades que cultivan", _quality_names(ids, QualityCatalog.index(QualityCatalog.load_catalog()), ", "))
+	_button("Actualizar jardín", "RefreshGarden", flow.refresh_shared_garden, true)
+	_button("Volver al vínculo", "ReturnToPair", func() -> void: flow.navigate("confirmed"), true)
+
 func _quality_names(ids: Array, catalog: Dictionary, separator: String = "\n") -> String:
 	var labels := PackedStringArray()
 	for id: String in ids:
@@ -324,6 +369,10 @@ func _quality_names(ids: Array, catalog: Dictionary, separator: String = "\n") -
 func _error() -> void:
 	var messages := {
 		"draft_cleanup": ["Sesión cerrada", "No pudimos borrar el borrador guardado de esta cuenta."],
+		"planting_needs_approval": ["Falta aprobar el acuerdo", "Ambos tienen que aprobar la versión vigente antes de sembrar."],
+		"invalid_planting": ["No pudimos confirmar la siembra", "Consultá el estado antes de intentar de nuevo."],
+		"cultivation_locked": ["La semilla ya se sembró", "Consultá el jardín compartido para ver el cultivo."],
+		"milestone_unavailable": ["Brote no disponible", "Actualizá el jardín e intentá de nuevo."],
 		"agreement_version_conflict": ["El acuerdo cambió", "Consultá la última versión antes de editarla o aprobarla."],
 		"agreement_unavailable": ["Acuerdo no disponible", "Actualizá las elecciones compartidas."],
 		"invalid_agreement": ["Revisá el acuerdo", "Ingresá un nombre de 2 a 30 caracteres y una intención opcional de hasta 120."],
@@ -355,7 +404,8 @@ func _error() -> void:
 	}
 	var message: Array = messages.get(flow.error, messages.unavailable)
 	if not flow.is_demo() and flow.error == "invalid_pin": message = ["Invitación no disponible", "Revisá el código o pedí uno nuevo. Puede estar vencido o cancelado."]
-	if flow.error in ["offline", "unavailable"] and flow._operation in ["submit_selection", "reopen_selection", "update_agreement", "approve_agreement"]:
+	if flow.error in ["offline", "unavailable"] and flow._operation in ["submit_selection", "reopen_selection", "update_agreement", "approve_agreement",
+		"confirm_planting", "withdraw_planting", "mark_milestone_seen"]:
 		message = ["Falta confirmar el estado", "Recuperá la conexión y consultá el vínculo para saber si se completó la acción."]
 	elif flow.error == "offline" and flow._operation == "pair_state" and flow.uses_secure_drafts():
 		message = ["No pudimos verificar el vínculo", "Tu borrador sigue guardado en este dispositivo. Recuperá la conexión y reintentá para volver a abrirlo."]
@@ -378,7 +428,8 @@ func _error() -> void:
 		_button("Ingresar otro código", "RetryAccessCode", func() -> void: flow.navigate("verify"))
 		_button("Pedir un nuevo código", "NewAccessCode", func() -> void: flow.navigate("access"), true)
 	else:
-		var retry_label := "Consultar estado" if flow._operation in ["submit_selection", "reopen_selection", "update_agreement", "approve_agreement"] else "Reintentar"
+		var retry_label := "Consultar estado" if flow._operation in ["submit_selection", "reopen_selection", "update_agreement", "approve_agreement",
+		"confirm_planting", "withdraw_planting", "mark_milestone_seen"] else "Reintentar"
 		_button(retry_label, "RetryOperation", func() -> void: flow.retry())
 		_button("Volver al espacio" if flow.state.has_pair() else "Usar otra invitación", "RecoverInvitation", func() -> void: flow.return_from_error(), true)
 
