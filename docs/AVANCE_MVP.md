@@ -44,7 +44,7 @@ Estos identificadores son propios del seguimiento. Los puntos «1 y 2» de nuest
 | MVP-00 | Base reproducible del proyecto | Cumplido | Motor fijado, estructura, exportación Android y verificaciones reproducibles. |
 | MVP-01 | Validación móvil y decisión del motor | En desarrollo | APK, HTTPS, teclado y navegación comprobados parcialmente. TalkBack sigue sin exponer los controles de la versión principal en el emulador. El gesto autenticado pasó con una cuenta sintética en el emulador. Faltan mediciones y accesibilidad completa. |
 | MVP-02 | Cuentas y vínculo bilateral real | Por validar | Vínculo confirmado históricamente. Sesión segura verificada con datos de prueba en el emulador. Reapertura y sesión verificadas contra el servicio alojado con cuentas sintéticas. La cuenta principal histórica queda pendiente. |
-| MVP-03 | Selección privada y revelación bilateral | Validado en desarrollo | Borrador privado, espera, revelación y reapertura comprobados en Android emulado y Supabase de desarrollo. |
+| MVP-03 | Selección privada y revelación bilateral | Validado en desarrollo | 9 de 9 casos aprobados en Android emulado con backend local. El borrador, la espera, la revelación y la reapertura también se verificaron previamente contra Supabase de desarrollo. |
 | MVP-04 | Acuerdo y receta compartida | Pendiente | Mezcla visual local de prueba; faltan receta autorizada y aprobaciones por versión. |
 | MVP-05 | Siembra única y primer brote | Pendiente | Semilla y brote visuales de demo; faltan transacción, tiempo de servidor e hito real. |
 | MVP-06 | Salida, eliminación y recuperación | Pendiente | Cierre de sesión y algunos errores de red implementados; faltan desvinculación y eliminación real. |
@@ -103,7 +103,7 @@ Evidencia: [cuentas y validación](CUENTAS_Y_VALIDACION.md), `backend/supabase/m
 
 ### MVP-03 · Selección privada y revelación
 
-[Objetivos, recorrido medible y pruebas de aceptación de M3](MVP_03.md).
+[Objetivos, recorrido medible y resultados de los nueve casos de M3](MVP_03.md#aceptación-en-android-emulado--17-de-noviembre-de-2026).
 
 - [x] Guardar una selección propia de 3 a 5 IDs únicos del catálogo vigente, aislada por cuenta y vínculo.
 - [x] Mantener las elecciones privadas hasta que ambos consientan compartir sus revisiones vigentes.
@@ -194,6 +194,7 @@ Para iniciar un bloque, tomar la primera prioridad pendiente, consultar su contr
 | 2026-10-04 | MVP-01 / MVP-02 | Refinamiento autónomo: 1347 pruebas de código y 33 del recorrido visual en escritorio sin fallos; APK actualizado generado. | Emulador con 4 fallos visuales; Samsung bloqueado; sesión segura, reapertura real y TalkBack completo pendientes. |
 | 2026-10-04 | MVP-01 | Samsung desbloqueado: 33 comprobaciones sin fallos; gesto en jardín demo y brote mediante toque. Corrección de ancho al 200%, con 1349 pruebas de código sin fallos. | Gesto autenticado, sesión segura, reapertura real y TalkBack completo pendientes; fallos del emulador aún por resolver. |
 | 2026-11-06 | MVP-01 / MVP-02 | Keystore y reaperturas con sesión de prueba en Android emulado. PostgreSQL local y recorrido bilateral local aprobados. TalkBack activo sin controles con nombre. | Supabase restaurado. Casos negativos aprobados en SQL alojado con rollback. APK conectado visible con GPU del host. Reingreso, OTP sintético y reconexión aprobados contra Supabase desde Android emulado. Pendientes la cuenta principal histórica y la accesibilidad. Prueba física diferida por preferencia del usuario. |
+| 2026-11-17 | MVP-03 | 9 de 9 casos aprobados en Android emulado con backend local y sesiones sintéticas. Evidencia por caso en [M3](MVP_03.md). | MVP-04, acuerdo y receta compartida. |
 
 ## Documentos de referencia
 

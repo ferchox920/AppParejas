@@ -61,6 +61,24 @@ Las escrituras devuelven `ok` y, si se rechazan, `error`. Los casos distinguen `
 | M3-08 · Perder conexión o cambiar de cuenta | Android | El borrador propio reaparece al volver con la misma cuenta y vínculo. Sin red no se registra consentimiento automático ni se muestra confirmación falsa. Otra cuenta no hereda el borrador. |
 | M3-09 · Reabrir y volver a compartir | SQL, API y Android | Ambos consentimientos se retiran y se conservan los borradores propios. La proyección se oculta en ambos clientes al consultar. Sólo dos consentimientos nuevos vuelven a revelar. |
 
+## Aceptación en Android emulado · 17 de noviembre de 2026
+
+**9 de 9 casos aprobados en la integración local** sobre la revisión `47085ee`. El APK de prueba ejecutó la escena principal y el flujo de la aplicación en `AppParejas_API_35`, con dos clientes y sesiones sintéticas independientes en el mismo emulador. El backend aislado usó PostgreSQL 17, PostgREST y las migraciones del repositorio. Un servicio de prueba emitió las sesiones sintéticas y permitió descartar una respuesta HTTPS después de que el servidor registrara la operación. La ejecución alojada de referencia sigue siendo la del 10 de noviembre.
+
+| Caso | Resultado observado |
+| --- | --- |
+| M3-01 | El vínculo activo abre el catálogo en fase privada. |
+| M3-02 | Compartir se habilita con tres cualidades y el selector rechaza la sexta. La API rechaza cantidades fuera de rango, IDs duplicados o desconocidos y catálogo obsoleto sin avanzar la revisión. |
+| M3-03 | El primer consentimiento deja a A en espera. B sólo recibe el indicador de consentimiento ajeno y puede seguir eligiendo. |
+| M3-04 | Tras el segundo consentimiento, ambas pantallas muestran sus elecciones y los clientes reciben la misma proyección y revisión. |
+| M3-05 | C y la sesión anónima quedan fuera de consulta, envío y reapertura. La tabla privada queda fuera de la API. |
+| M3-06 | Tras perder la respuesta, reintentar consulta el estado. Repetir la operación no avanza la revisión, cambiar su intención se rechaza y un recibo anterior a la reapertura no devuelve la revelación. |
+| M3-07 | Un cliente con revisión obsoleta recupera su borrador antes de compartir otra vez. Dos envíos concurrentes sobre la misma revisión producen una sola mutación. |
+| M3-08 | El borrador cifrado sobrevive al cierre forzado y al corte de acceso al backend. Al reconectar se recuperan los mismos IDs y revisión. La otra cuenta empieza con el selector vacío. |
+| M3-09 | Reabrir retira la revelación en ambos clientes, conserva sus borradores y exige dos consentimientos nuevos. |
+
+Evidencia local en `.artifacts/m3-acceptance/`: `emulator-write.log`, `emulator-offline.log`, `emulator-final.log`, `https.log` y `revelacion.png`.
+
 ## Seguimiento de la ejecución
 
 | Entrega | Evidencia para pasar |
@@ -70,7 +88,7 @@ Las escrituras devuelven `ok` y, si se rechazan, `error`. Los casos distinguen `
 | Cliente | Ejecutar el recorrido en dos clientes Android emulados. Verificar selector, consentimiento, espera, revelación y recuperación del borrador, con captura o registro por caso. |
 | Integración | Repetir contra Supabase de desarrollo con A, B y C. Registrar resultado, revisión de código, fecha, entorno y evidencia por ID. |
 
-El avance se registra como casos aprobados sobre casos exigidos por entrega. Un caso pendiente o bloqueado no suma. M3 cierra cuando los nueve casos pasan en los niveles indicados. La suite SQL inicial automatiza las aserciones de servidor de M3-01 a M3-07 y M3-09, incluida la revisión obsoleta secuencial. La carrera simultánea, la API autenticada y los recorridos Android quedan definidos para su ejecución posterior.
+El avance se registra como casos aprobados sobre casos exigidos por entrega. Un caso pendiente o bloqueado no suma. M3 cierra cuando los nueve casos pasan en los niveles indicados. La suite SQL inicial automatiza las aserciones de servidor de M3-01 a M3-07 y M3-09, incluida la revisión obsoleta secuencial. La ejecución del 17 de noviembre registra además la carrera simultánea, la API autenticada y el recorrido Android contra el backend local.
 
 En una base PostgreSQL local desechable, aplicar el arranque y la migración de vínculo existentes. Después ejecutar la prueba SQL. La transacción revierte sus cuentas y datos de prueba.
 
@@ -80,6 +98,6 @@ psql "$M3_TEST_DSN" -X -v ON_ERROR_STOP=1 -f backend/supabase/migrations/2026100
 psql "$M3_TEST_DSN" -X -v ON_ERROR_STOP=1 -f backend/tests/mvp03_selection.sql
 ```
 
-Para validar la implementación, aplicar también la futura migración de M3 antes de ejecutar la última línea. Con las RPC de M3 disponibles, el resultado esperado es `M3 OK`. Ante una violación, el script se detiene e identifica el caso. Sobre M2, el resultado esperado es `M3 BLOQUEADO: faltan las RPC de selección y revelación`.
+Para validar la implementación, aplicar también las tres migraciones de M3 en el orden de sus archivos antes de ejecutar la última línea. Con las RPC de M3 disponibles, el resultado esperado es `M3 OK`. Ante una violación, el script se detiene e identifica el caso. Sobre M2, el resultado esperado es `M3 BLOQUEADO: faltan las RPC de selección y revelación`.
 
-El 6 de noviembre de 2026, en PostgreSQL 17 local desechable, pasó la prueba de vínculo de M2 y la suite nueva devolvió el bloqueo esperado con código de salida 3. El hito parte con **0 de 9 casos aprobados de punta a punta**.
+El 6 de noviembre de 2026, en PostgreSQL 17 local desechable, pasó la prueba de vínculo de M2 y la suite nueva devolvió el bloqueo esperado con código de salida 3. El **0 de 9** corresponde al resultado inicial sobre M2.
