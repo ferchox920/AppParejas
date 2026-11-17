@@ -64,7 +64,12 @@ func _run() -> void:
 	app.garden.turn(1000)
 	_check(is_equal_approx(app.garden._yaw, 55.0), "Rotación acotada")
 	app.garden.zoom(-1000)
-	_check(is_equal_approx(app.garden._distance, 2.3), "Zoom acotado")
+	_check(is_equal_approx(app.garden._distance, GardenView.BOTANICAL_MIN_DISTANCE), "Zoom acotado para el brote botánico")
+	var legacy_recipe: Dictionary = app.garden._recipe.duplicate()
+	legacy_recipe.asset_version = "primitive-1"
+	app.garden.show_recipe(legacy_recipe, "sprout")
+	app.garden.zoom(-1000)
+	_check(is_equal_approx(app.garden._distance, 2.3), "El jardín anterior conserva su zoom")
 	app.garden.reset_camera()
 	_check(is_equal_approx(app.garden._yaw, 0.0), "Restablecer cámara")
 	app.show_screen("selection")

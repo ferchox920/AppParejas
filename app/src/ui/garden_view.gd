@@ -1,6 +1,9 @@
 class_name GardenView
 extends SubViewportContainer
 
+const BotanicalGarden = preload("res://src/ui/botanical_garden.gd")
+const BOTANICAL_MIN_DISTANCE := 2.80
+
 var stage: String = "seed"
 var reduced_motion: bool = true
 var _recipe: Dictionary = {}
@@ -8,6 +11,9 @@ var _viewport: SubViewport
 var _world: Node3D
 var _plant: Node3D
 var _camera: Camera3D
+var _terrain: Node3D
+var _environment: Environment
+var _botanical: bool
 var _yaw: float = 0.0
 var _distance: float = 3.0
 var _elapsed: float = 0.0
@@ -24,14 +30,13 @@ func _ready() -> void:
 	add_child(_viewport)
 	_world = Node3D.new()
 	_viewport.add_child(_world)
-	var environment := Environment.new()
-	environment.background_mode = Environment.BG_COLOR
-	environment.background_color = Color("e9efe3")
-	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color.WHITE
-	environment.ambient_light_energy = 0.45
+	_environment = Environment.new()
+	_environment.background_mode = Environment.BG_COLOR
+	_environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	_environment.ambient_light_color = Color.WHITE
+	_environment.ambient_light_energy = 0.45
 	var world_environment := WorldEnvironment.new()
-	world_environment.environment = environment
+	world_environment.environment = _environment
 	_world.add_child(world_environment)
 	var light := DirectionalLight3D.new()
 	light.rotation_degrees = Vector3(-50, -30, 0)
@@ -40,21 +45,33 @@ func _ready() -> void:
 	_camera = Camera3D.new()
 	_camera.fov = 35
 	_world.add_child(_camera)
-	var terrain := CylinderMesh.new()
-	terrain.top_radius = 0.76
-	terrain.bottom_radius = 0.65
-	terrain.height = 0.17
-	_mesh(_world, terrain, Color("cfa585"), Vector3(0, 0.09, 0))
-	var soil := CylinderMesh.new()
-	soil.top_radius = 0.74
-	soil.bottom_radius = 0.74
-	soil.height = 0.025
-	_mesh(_world, soil, Color("dcbf9f"), Vector3(0, 0.19, 0))
 	_plant = Node3D.new()
 	_world.add_child(_plant)
 	gui_input.connect(_on_input)
 	_rebuild()
 	_update_camera()
+
+func _set_terrain(botanical: bool) -> void:
+	if is_instance_valid(_terrain):
+		_world.remove_child(_terrain)
+		_terrain.queue_free()
+	_terrain = Node3D.new()
+	_world.add_child(_terrain)
+	_botanical = botanical
+	_environment.background_color = Color("e7ece0" if botanical else "e9efe3")
+	if botanical:
+		BotanicalGarden.build_terrain(_terrain)
+		return
+	var terrain := CylinderMesh.new()
+	terrain.top_radius = 0.76
+	terrain.bottom_radius = 0.65
+	terrain.height = 0.17
+	_mesh(_terrain, terrain, Color("cfa585"), Vector3(0, 0.09, 0))
+	var soil := CylinderMesh.new()
+	soil.top_radius = 0.74
+	soil.bottom_radius = 0.74
+	soil.height = 0.025
+	_mesh(_terrain, soil, Color("dcbf9f"), Vector3(0, 0.19, 0))
 
 func show_recipe(recipe: Dictionary, next_stage: String = "seed") -> void:
 	_recipe = recipe
@@ -67,7 +84,8 @@ func turn(amount: float) -> void:
 	_update_camera()
 
 func zoom(amount: float) -> void:
-	_distance = clampf(_distance + amount, 2.3, 4.0)
+	var minimum := BOTANICAL_MIN_DISTANCE if _botanical else 2.3
+	_distance = clampf(_distance + amount, minimum, 4.0)
 	_update_camera()
 
 func reset_camera() -> void:
@@ -100,13 +118,21 @@ func _update_camera() -> void:
 	if not is_instance_valid(_camera):
 		return
 	var angle: float = deg_to_rad(_yaw)
-	_camera.position = Vector3(sin(angle) * _distance, 1.6, cos(angle) * _distance)
+	var distance := maxf(_distance, BOTANICAL_MIN_DISTANCE) if _botanical else _distance
+	_camera.position = Vector3(sin(angle) * distance, 1.6, cos(angle) * distance)
 	_camera.look_at(Vector3(0, 0.55, 0), Vector3.UP)
 
 func _rebuild() -> void:
+	var botanical: bool = _recipe.get("asset_version") == RecipePreview.ASSET_VERSION
+	if not is_instance_valid(_terrain) or _botanical != botanical:
+		_set_terrain(botanical)
+		_update_camera()
 	for child: Node in _plant.get_children():
 		_plant.remove_child(child)
 		child.queue_free()
+	if botanical:
+		BotanicalGarden.build_plant(_plant, _recipe, stage)
+		return
 	var families: Dictionary = _recipe.get("family_weights", {})
 	var affection: float = families.get("afe", 0.0)
 	if stage == "seed":

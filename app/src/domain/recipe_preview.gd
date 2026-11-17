@@ -1,6 +1,8 @@
 class_name RecipePreview
 extends RefCounted
 
+const ASSET_VERSION := "botanical-1"
+
 # Receta de la demostración local. Las parejas autenticadas reciben su receta del servidor.
 static func build(first: Array[String], second: Array[String], catalog: Dictionary) -> Dictionary:
 	if QualityCatalog.validate_selection(first, catalog) != "" or QualityCatalog.validate_selection(second, catalog) != "":
@@ -26,6 +28,6 @@ static func build(first: Array[String], second: Array[String], catalog: Dictiona
 		"family_weights": families,
 		"catalog_version": catalog["catalog_version"],
 		"recipe_version": "preview-1",
-		"asset_version": "primitive-1",
-		"identity": ("preview-1|primitive-1|%s|%s" % [catalog["catalog_version"], ";".join(canonical)]).sha256_text()
+		"asset_version": ASSET_VERSION,
+		"identity": ("preview-1|%s|%s|%s" % [ASSET_VERSION, catalog["catalog_version"], ";".join(canonical)]).sha256_text()
 	}
