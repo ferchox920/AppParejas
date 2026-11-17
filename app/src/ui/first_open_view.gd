@@ -155,7 +155,7 @@ func _account_access() -> void:
 	email_field.text = str(flow.access_draft.email)
 	email_field.text_changed.connect(func(value: String) -> void: flow.access_draft.email = value)
 	email_field.virtual_keyboard_type = LineEdit.KEYBOARD_TYPE_EMAIL_ADDRESS
-	_card("Datos de esta prueba", "Guardamos tu nombre, identidad de acceso y vínculo en el servicio de desarrollo. El correo se usa para verificar tu acceso. La sesión dura mientras esta app permanezca abierta. No ingreses información íntima.")
+	_card("Datos de esta prueba", "Guardamos tu nombre, identidad de acceso y vínculo en el servicio de desarrollo. El correo se usa para verificar tu acceso. En Android, la sesión puede continuar al reabrir la app. Podés cerrarla desde Cuenta y vínculo. No ingreses información íntima.")
 	var consent := CheckBox.new()
 	consent.name = "AccountConsent"
 	consent.text = "Acepto el uso de mis datos para esta prueba"
@@ -475,6 +475,12 @@ func _preferences() -> void:
 		flow.changed.emit()
 	, true)
 	size_button.disabled = flow.busy
+	if text_scale > 1.0 and text_scale < 2.0:
+		var largest_button := _button("Texto al 200 %", "OnboardingTextLargest", func() -> void:
+			flow.save_preferences(2.0, true)
+			flow.changed.emit()
+		, true)
+		largest_button.disabled = flow.busy
 	_label("Movimiento reducido activado. Sin animaciones de carga.", 14, AppTheme.MUTED)
 
 func _brand(height: int) -> void:

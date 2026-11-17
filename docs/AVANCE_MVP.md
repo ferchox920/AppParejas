@@ -48,7 +48,7 @@ Estos identificadores son propios del seguimiento. Los puntos «1 y 2» de nuest
 | MVP-04 | Acuerdo y receta compartida | Validado en Supabase de desarrollo | Dos cuentas en Android emulado recuperaron la misma receta, editaron el acuerdo y aprobaron la versión vigente. |
 | MVP-05 | Siembra única y primer brote | Validado en Supabase de desarrollo | Android emulado confirmó la siembra bilateral, recuperó un solo cultivo y registró un solo brote con presentación por persona. |
 | MVP-06 | Salida, eliminación y recuperación | Validado en Supabase de desarrollo | Desvinculación y eliminación real en Auth verificadas en Android emulado. Trabajador y retención activos. Respaldo del piloto por definir. |
-| MVP-07 | Piloto del recorrido completo | En validación | Recorrido sintético en Supabase y compilación Android verificados. Pendientes OTP, accesibilidad, rendimiento físico, sesiones con participantes y respaldo. |
+| MVP-07 | Piloto del recorrido completo | En validación | Recorrido sintético y p95 del jardín verificados en S25 Ultra. OTP de Gmail verificado en emulador. Pendientes TalkBack completo, memoria del APK de un solo cliente, sesiones con participantes y respaldo. |
 
 ### MVP-00 · Base reproducible
 
@@ -195,7 +195,7 @@ El [ensayo de MVP-07](MVP_07.md) registra las comprobaciones del 17 de noviembre
 - [ ] Completar el recorrido real desde acceso hasta primer brote y salida.
 - [ ] Comprobar privacidad con una tercera cuenta y todas las vías de lectura expuestas.
 - [ ] Cumplir accesibilidad, texto aumentado, áreas táctiles y movimiento reducido.
-- [ ] Medir rendimiento y estabilidad en los dispositivos objetivo.
+- [ ] Verificar memoria y consumo con el APK de un solo cliente. El S25 Ultra ya completó diez minutos de jardín con p95 de 8,80 ms y sin cierres.
 - [ ] Revisar comprensión del consentimiento, espera, aprobación, siembra y salida con personas de prueba.
 - [ ] Preparar compilación, configuración y correo del entorno de piloto.
 - [ ] Si iOS entra en el alcance, completar exportación y VoiceOver en dispositivo real.
@@ -245,6 +245,7 @@ Para iniciar un bloque, tomar la primera prioridad pendiente, consultar su contr
 | 2026-11-17 | MVP-06 | Desvinculación unilateral y solicitud de eliminación verificadas en Android emulado. Suite SQL, carrera de revocación y trabajador con reintento aprobados localmente. | Desplegar el trabajador, validar Auth Admin real y confirmar retención y operación de lanzamiento. |
 | 2026-11-17 | MVP-06 alojado | Migraciones de salida y retención aplicadas. Edge Function con ejecución por minuto, borrado real de Auth y limpieza de QA verificados. Retención de treinta días y Gmail acordados. | Seleccionar cobertura de respaldo antes del piloto. |
 | 2026-11-17 | MVP-07 | Recorrido de dos cuentas sintéticas hasta brote y salida, rechazo a una tercera, medición inicial y restauración local. | OTP, TalkBack, rendimiento en dispositivo objetivo, sesiones con participantes y respaldo alojado. |
+| 2026-11-17 | MVP-07 en S25 Ultra | 15 comprobaciones físicas, diez minutos de jardín, OTP de Gmail en emulador, privacidad y reconciliación de una restauración sintética. | Completar TalkBack, validar memoria con APK de un solo cliente, respaldar el piloto y hacer las sesiones con participantes. |
 
 ## Documentos de referencia
 

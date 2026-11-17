@@ -206,7 +206,7 @@ func _layout_tests() -> void:
 	for width: int in [360, 390]:
 		root.size = Vector2i(width, 844)
 		root.content_scale_size = Vector2i(width, 844)
-		for scale: float in [1.0, 1.5]:
+		for scale: float in [1.0, 1.5, 2.0]:
 			app._set_text_scale(scale)
 			for screen_name: String in ["loading", "welcome", "intro", "connect", "access", "invite", "join", "scan", "review", "waiting", "confirmed", "error"]:
 				app.first_open.intro_step = 1
@@ -222,6 +222,18 @@ func _layout_tests() -> void:
 					check(app.find_child("AcceptInvitation", true, false) != null, "Aceptación visible y explícita")
 				if screen_name == "error":
 					check(app.find_child("CameraSettings", true, false) != null and app.find_child("UsePIN", true, false) != null, "Permiso denegado ofrece ajustes y PIN")
+	app.first_open.navigate("welcome")
+	app._set_text_scale(1.0)
+	(app.find_child("OnboardingText", true, false) as Button).pressed.emit()
+	await process_frame
+	check(app.text_scale == 1.5, "Texto más grande aplica el 150%")
+	(app.find_child("OnboardingTextLargest", true, false) as Button).pressed.emit()
+	await process_frame
+	check(app.text_scale == 2.0 and app.first_open.store.load_state().state.preferences.text_scale == 2.0,
+		"Texto al 200% se aplica y se guarda")
+	(app.find_child("OnboardingText", true, false) as Button).pressed.emit()
+	await process_frame
+	check(app.text_scale == 1.0, "Texto normal restablece el 100%")
 	app.queue_free()
 	await process_frame
 
