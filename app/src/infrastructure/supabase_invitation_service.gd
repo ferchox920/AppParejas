@@ -89,18 +89,18 @@ func _execute(operation: String, payload: Dictionary, request_id: int, generatio
 		result = {"ok": true}
 	elif operation in ["bootstrap", "status", "create", "resolve", "accept", "cancel", "pair_state",
 		"submit_selection", "reopen_selection", "update_agreement", "approve_agreement",
-		"confirm_planting", "withdraw_planting", "mark_milestone_seen"]:
+		"confirm_planting", "withdraw_planting", "mark_milestone_seen", "end_pair", "request_account_deletion"]:
 		result = await _ensure_session()
 		if result.ok and generation == _generation:
 			match operation:
 				"bootstrap", "status": result = await _rpc("get_connection_state", {})
 				"pair_state": result = await _rpc("get_pair_state", {"pair_id": payload.pair_id})
-				"mark_milestone_seen": result = await _rpc(operation, payload)
+				"mark_milestone_seen", "request_account_deletion": result = await _rpc(operation, payload)
 				"confirm_planting", "withdraw_planting":
 					# Una nueva confirmación tras retirarla puede tener la misma versión y otros efectos.
 					payload.operation_id = _new_operation_id()
 					result = await _rpc(operation, payload)
-				"submit_selection", "reopen_selection", "update_agreement", "approve_agreement":
+				"submit_selection", "reopen_selection", "update_agreement", "approve_agreement", "end_pair":
 					var key := operation + ":" + JSON.stringify(payload)
 					payload.operation_id = _operation_id(key)
 					result = await _rpc(operation, payload)

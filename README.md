@@ -46,7 +46,8 @@ La experiencia combina una interfaz cálida, un catálogo de veinte cualidades y
 | Accesibilidad | Texto ampliado, movimiento reducido y comprobaciones de disposición; TalkBack sigue pendiente en la versión principal |
 | Selección y acuerdo | Selección privada y revelación bilateral en desarrollo. Receta del servidor, acuerdo y aprobaciones por versión verificados en Supabase de desarrollo |
 | Jardín compartido | Siembra bilateral y primer brote verificados en Supabase de desarrollo |
-| Próximos bloques | Desvinculación y eliminación de cuenta |
+| Salida y eliminación | Desvinculación unilateral y cola de eliminación verificadas con backend local |
+| Próximos bloques | Validar MVP-06 en Supabase de desarrollo y completar los criterios del piloto |
 
 **El MVP está en desarrollo.** Las cuentas y el vínculo real cuentan con evidencia de pruebas previas en escritorio y Android. Las capturas anteriores muestran la demostración local del jardín. Android conserva la sesión cifrada con Keystore y recupera el vínculo desde el servidor.
 

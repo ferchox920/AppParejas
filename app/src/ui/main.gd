@@ -97,6 +97,8 @@ func _notification(what: int) -> void:
 			first_open.revalidate_private_selection.call_deferred()
 		elif first_open.screen in ["agreement", "agreement_edit"]:
 			first_open.refresh_agreement.call_deferred()
+		elif first_open.screen in ["account", "confirm_exit", "confirm_delete"]:
+			first_open.account_settings.call_deferred()
 		elif first_open.screen == "planting": first_open.refresh_planting.call_deferred()
 		elif first_open.screen == "shared_garden": first_open.refresh_shared_garden.call_deferred()
 		elif not first_open.is_demo() and first_open.screen in ["waiting", "confirmed"] and not first_open.busy:
@@ -125,6 +127,8 @@ func _go_back() -> void:
 		"agreement": first_open.navigate("selection_revealed")
 		"agreement_edit", "planting": first_open.navigate("agreement")
 		"shared_garden": first_open.navigate("confirmed")
+		"account": first_open.navigate("confirmed" if first_open.state.has_pair() else "connect")
+		"confirm_exit", "confirm_delete": first_open.account_settings()
 		"scan": first_open.navigate("join")
 		"access": first_open.navigate("join" if first_open.state.invitation.action == "join" else "connect")
 		"verify": first_open.navigate("access")

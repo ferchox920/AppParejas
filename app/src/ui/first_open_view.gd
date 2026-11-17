@@ -32,6 +32,13 @@ func _ready() -> void:
 		"agreement_edit": _edit_agreement()
 		"planting": _planting()
 		"shared_garden": _shared_garden()
+		"account": _account_settings()
+		"confirm_exit": _confirm_exit()
+		"confirm_delete": _confirm_delete()
+		"deletion_requested":
+			_title("Eliminación solicitada")
+			_label("Cerramos tu acceso. El servidor continuará el borrado de la cuenta y sus datos.")
+			_button("Continuar", "ContinueAfterDeletion", func() -> void: flow.navigate("connect"))
 		"error": _error()
 	_status = _label("", 14, AppTheme.MUTED)
 	_status.name = "Status"
@@ -40,7 +47,35 @@ func _ready() -> void:
 		_disable_actions(self)
 	if flow.screen != "loading": _preferences()
 	if not flow.is_demo() and flow.state.has_session():
+		if flow.screen not in ["account", "confirm_exit", "confirm_delete", "loading"]:
+			_button("Cuenta y vínculo", "AccountSettings", flow.account_settings, true)
 		_button("Cerrar sesión", "Logout", func() -> void: flow.logout(), true)
+
+func _account_settings() -> void:
+	_title("Cuenta y vínculo")
+	if flow.state.has_pair():
+		_label("Tu cuenta tiene un vínculo activo.")
+		_button("Desvincularme", "PrepareExit", flow.prepare_exit, true)
+	else:
+		_label("Tu cuenta está disponible para crear un nuevo vínculo.")
+	_button("Eliminar mi cuenta", "PrepareDelete", func() -> void: flow.navigate("confirm_delete"), true)
+	_button("Actualizar estado", "RefreshAccount", flow.account_settings, true)
+	_button("Volver", "ReturnFromAccount", func() -> void:
+		flow.navigate("confirmed" if flow.state.has_pair() else "connect"), true)
+
+func _confirm_exit() -> void:
+	_title("Desvincularme")
+	_label("Ambos perderán el acceso al espacio compartido. El jardín quedará archivado y las confirmaciones pendientes se cancelarán.")
+	_label("Tu cuenta seguirá disponible para crear otro vínculo.")
+	_button("Confirmar desvinculación", "ConfirmExit", flow.end_pair)
+	_button("Cancelar", "CancelExit", flow.account_settings, true)
+
+func _confirm_delete() -> void:
+	_title("Eliminar mi cuenta")
+	_label("Se revocará el acceso al vínculo y se eliminarán tu cuenta, tus datos y el jardín derivado de ambos aportes.")
+	_label("El borrado continuará en el servidor. Esta acción es permanente.")
+	_button("Solicitar eliminación permanente", "ConfirmDelete", flow.delete_account)
+	_button("Cancelar", "CancelDelete", flow.account_settings, true)
 
 func _loading() -> void:
 	_brand(180)
@@ -372,6 +407,7 @@ func _error() -> void:
 		"planting_needs_approval": ["Falta aprobar el acuerdo", "Ambos tienen que aprobar la versión vigente antes de sembrar."],
 		"invalid_planting": ["No pudimos confirmar la siembra", "Consultá el estado antes de intentar de nuevo."],
 		"cultivation_locked": ["La semilla ya se sembró", "Consultá el jardín compartido para ver el cultivo."],
+		"account_deleting": ["Eliminación solicitada", "El servidor está completando el borrado de la cuenta."],
 		"milestone_unavailable": ["Brote no disponible", "Actualizá el jardín e intentá de nuevo."],
 		"agreement_version_conflict": ["El acuerdo cambió", "Consultá la última versión antes de editarla o aprobarla."],
 		"agreement_unavailable": ["Acuerdo no disponible", "Actualizá las elecciones compartidas."],
@@ -405,7 +441,7 @@ func _error() -> void:
 	var message: Array = messages.get(flow.error, messages.unavailable)
 	if not flow.is_demo() and flow.error == "invalid_pin": message = ["Invitación no disponible", "Revisá el código o pedí uno nuevo. Puede estar vencido o cancelado."]
 	if flow.error in ["offline", "unavailable"] and flow._operation in ["submit_selection", "reopen_selection", "update_agreement", "approve_agreement",
-		"confirm_planting", "withdraw_planting", "mark_milestone_seen"]:
+		"confirm_planting", "withdraw_planting", "mark_milestone_seen", "end_pair", "request_account_deletion"]:
 		message = ["Falta confirmar el estado", "Recuperá la conexión y consultá el vínculo para saber si se completó la acción."]
 	elif flow.error == "offline" and flow._operation == "pair_state" and flow.uses_secure_drafts():
 		message = ["No pudimos verificar el vínculo", "Tu borrador sigue guardado en este dispositivo. Recuperá la conexión y reintentá para volver a abrirlo."]
@@ -429,7 +465,7 @@ func _error() -> void:
 		_button("Pedir un nuevo código", "NewAccessCode", func() -> void: flow.navigate("access"), true)
 	else:
 		var retry_label := "Consultar estado" if flow._operation in ["submit_selection", "reopen_selection", "update_agreement", "approve_agreement",
-		"confirm_planting", "withdraw_planting", "mark_milestone_seen"] else "Reintentar"
+		"confirm_planting", "withdraw_planting", "mark_milestone_seen", "end_pair", "request_account_deletion"] else "Reintentar"
 		_button(retry_label, "RetryOperation", func() -> void: flow.retry())
 		_button("Volver al espacio" if flow.state.has_pair() else "Usar otra invitación", "RecoverInvitation", func() -> void: flow.return_from_error(), true)
 

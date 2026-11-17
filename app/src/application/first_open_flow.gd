@@ -14,6 +14,7 @@ var selection_view: Dictionary = {}
 var agreement_draft: Dictionary = {}
 var _selection_catalog_version: int = 0
 var _draft_cleanup_failed := false
+var _deletion_requested := false
 var intro_step: int = 0
 var access_draft: Dictionary = {"name": "", "email": "", "consent": false}
 var timeout_seconds: float = 12.0
@@ -67,7 +68,7 @@ func navigate(next: String) -> void:
 	if busy: return
 	error = ""
 	if next not in ["selection", "selection_waiting", "selection_revealed", "agreement", "agreement_edit",
-		"planting", "shared_garden"]:
+		"planting", "shared_garden", "confirm_exit"]:
 		selection_view.clear()
 	if next != "agreement_edit": agreement_draft.clear()
 	if next != "selection":
@@ -245,6 +246,40 @@ func approve_agreement() -> void:
 	screen = "loading"
 	_request("approve_agreement", {"pair_id": state.pair.id, "agreement_version": int(current.version)}, "agreement")
 
+func account_settings() -> void:
+	if busy or is_demo() or not state.has_session(): return
+	# Consultar primero permite recuperar una desvinculación cuya respuesta se perdió.
+	screen = "loading"
+	_request("status", _actor(), "account")
+
+func prepare_exit() -> void:
+	if busy or not state.has_pair(): return
+	screen = "loading"
+	_request("pair_state", {"pair_id": state.pair.id}, "confirm_exit")
+
+func end_pair() -> void:
+	if busy or screen != "confirm_exit" or not state.has_pair(): return
+	var revision: Variant = selection_view.get("pair_revision")
+	if not revision is int and not revision is float: return
+	screen = "loading"
+	_request("end_pair", {"pair_id": state.pair.id, "expected_pair_revision": int(revision)}, "account")
+
+func delete_account() -> void:
+	if busy or screen != "confirm_delete" or not state.has_session(): return
+	screen = "loading"
+	_request("request_account_deletion", {}, "account")
+
+func _clear_pair_data() -> bool:
+	var drafts := _draft_store()
+	var cleared := drafts == null or drafts.clear()
+	state.pair = {}
+	state.selection.clear()
+	selection_view.clear()
+	agreement_draft.clear()
+	invitation_view.clear()
+	state.invitation = {"action": "", "outgoing_id": "", "pending_reference": ""}
+	return cleared
+
 func planting() -> Dictionary:
 	var current := agreement()
 	var flags: Variant = selection_view.get("planting")
@@ -294,6 +329,8 @@ func retry() -> void:
 	if busy: return
 	if _retry_screen == "loading":
 		start()
+	elif _retry_screen in ["account", "confirm_exit"]:
+		account_settings()
 	elif _retry_screen in ["agreement", "agreement_edit"]:
 		refresh_agreement()
 	elif _retry_screen in ["planting", "shared_garden"]:
@@ -397,6 +434,10 @@ func _completed(id: int, result: Dictionary) -> void:
 			screen = "agreement_edit"
 			changed.emit()
 			return
+		if reason == "account_deleting":
+			_deletion_requested = true
+			logout()
+			return
 		_fail(reason, _retry_screen)
 		return
 	match _operation:
@@ -409,7 +450,10 @@ func _completed(id: int, result: Dictionary) -> void:
 			if revision < 0 or revision > 2147483647 or revision != floorf(revision):
 				_fail("selection_unavailable", "confirmed")
 				return
-			selection_view = result
+			selection_view = result.duplicate(true)
+			if _retry_screen == "confirm_exit":
+				navigate("confirm_exit")
+				return
 			if not cultivation().is_empty():
 				state.pair.cultivation_available = true
 				navigate("shared_garden")
@@ -445,14 +489,26 @@ func _completed(id: int, result: Dictionary) -> void:
 			refresh_planting()
 		"mark_milestone_seen":
 			refresh_shared_garden()
+		"end_pair":
+			if not _clear_pair_data(): _fail("draft_cleanup", "account")
+			elif _persist(): navigate("account")
+		"request_account_deletion":
+			_deletion_requested = true
+			logout()
 		"send_code": navigate("verify")
 		"logout":
 			_discard_account_state()
 			if _draft_cleanup_failed:
 				_fail("draft_cleanup", "connect")
-			elif _persist(): navigate("connect")
+			elif _persist():
+				navigate("deletion_requested" if _deletion_requested else "connect")
+				_deletion_requested = false
 		"bootstrap", "status":
 			if not is_demo(): state.session = result.get("session", {})
+			if not result.has("pair") and state.has_pair():
+				if not _clear_pair_data():
+					_fail("draft_cleanup", "connect")
+					return
 			if result.has("pair"):
 				var continued := bool(state.pair.get("continued", false))
 				state.pair = result.pair
@@ -467,7 +523,8 @@ func _completed(id: int, result: Dictionary) -> void:
 				if _retry_screen != "access" and not state.has_pair() and state.invitation.outgoing_id.is_empty() and state.invitation.action == "invite":
 					state.invitation.action = ""
 			if not _persist(): return
-			if not str(state.invitation.pending_reference).is_empty() and state.has_session():
+			if _retry_screen == "account": navigate("account")
+			elif not str(state.invitation.pending_reference).is_empty() and state.has_session():
 				_resolve()
 			elif not is_demo() and state.has_pair() and state.pair.get("cultivation_available") == true:
 				refresh_shared_garden()
@@ -512,6 +569,8 @@ func _fail(reason: String, origin: String) -> void:
 	if not is_demo() and _operation in ["bootstrap", "status"]:
 		state.pair = {}
 		invitation_view = {}
+	if reason in ["pair_unavailable", "auth", "session_storage"] and not is_demo():
+		_clear_pair_data()
 	if reason in ["auth", "session_storage"] and not is_demo():
 		state.session = {}
 		state.pair = {}

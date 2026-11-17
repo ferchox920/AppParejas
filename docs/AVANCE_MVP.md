@@ -47,7 +47,7 @@ Estos identificadores son propios del seguimiento. Los puntos «1 y 2» de nuest
 | MVP-03 | Selección privada y revelación bilateral | Validado en desarrollo | 9 de 9 casos aprobados en Android emulado con backend local. El borrador, la espera, la revelación y la reapertura también se verificaron previamente contra Supabase de desarrollo. |
 | MVP-04 | Acuerdo y receta compartida | Validado en Supabase de desarrollo | Dos cuentas en Android emulado recuperaron la misma receta, editaron el acuerdo y aprobaron la versión vigente. |
 | MVP-05 | Siembra única y primer brote | Validado en Supabase de desarrollo | Android emulado confirmó la siembra bilateral, recuperó un solo cultivo y registró un solo brote con presentación por persona. |
-| MVP-06 | Salida, eliminación y recuperación | Pendiente | Cierre de sesión y algunos errores de red implementados; faltan desvinculación y eliminación real. |
+| MVP-06 | Salida, eliminación y recuperación | Validado en desarrollo local | Desvinculación, revocación de acceso y cola de eliminación con trabajador reintentable implementados. Faltan despliegue, Auth Admin real y decisiones operativas. |
 | MVP-07 | Piloto del recorrido completo | Pendiente | Requiere objetivos anteriores, privacidad, comprensión y calidad móvil validadas. |
 
 ### MVP-00 · Base reproducible
@@ -177,14 +177,15 @@ Después de validar se eliminaron las tres cuentas sintéticas de esta ejecució
 
 ### MVP-06 · Salida y recuperación
 
-- [ ] Permitir desvinculación unilateral y revocar el acceso cruzado en el servidor.
-- [ ] Revocar invitaciones y cancelar acciones bilaterales pendientes al salir.
-- [ ] Implementar eliminación de cuenta y datos con tareas de borrado reintentables.
-- [ ] Borrar sesión segura, borradores y memoria compartida al cerrar sesión según el contrato.
-- [ ] Resolver desconexión, sesión vencida y respuestas tardías sin repetir acciones sensibles automáticamente.
+- [x] Permitir desvinculación unilateral y revocar el acceso cruzado en el servidor.
+- [x] Revocar invitaciones y cancelar acciones bilaterales pendientes al salir.
+- [x] Implementar eliminación de cuenta y datos con tareas de borrado reintentables.
+- [x] Borrar sesión segura, borradores y memoria compartida al cerrar sesión según el contrato.
+- [x] Resolver desconexión, sesión vencida y respuestas tardías sin repetir acciones sensibles automáticamente.
 - [ ] Definir retención, proveedor de correo final y operación del entorno de lanzamiento.
 
-Cierre: ninguna operación ni recibo previo permite recuperar contenido ajeno después de salir; la eliminación completa puede verificarse y recuperarse ante fallos.
+La validación local aprobó seis casos en el emulador Android. El servidor verificó los permisos, la revocación y la purga. El trabajador retomó una eliminación tras un error administrativo simulado y completó el segundo intento. El cierre de este hito requiere probar Auth Admin y desplegar el trabajador en Supabase de desarrollo. [Contrato, resultados y operación de MVP-06](MVP_06.md)
+
 
 ### MVP-07 · Piloto
 
@@ -238,6 +239,7 @@ Para iniciar un bloque, tomar la primera prioridad pendiente, consultar su contr
 | 2026-11-17 | MVP-04 | Ocho casos aprobados en Android emulado con el backend local, incluidas edición, aprobación concurrente y reapertura. | Validación alojada registrada en la fila siguiente a MVP-05. |
 | 2026-11-17 | MVP-05 | Ocho casos aprobados en Android emulado con backend local. Confirmaciones concurrentes, un cultivo, un brote y presentación individual verificados. | Validación alojada registrada en la fila siguiente. |
 | 2026-11-17 | MVP-04 / MVP-05 | Tres migraciones aplicadas en AppParejas-desarrollo. Suites SQL y diez comprobaciones en el emulador aprobadas. | MVP-06, desvinculación y eliminación de cuenta. |
+| 2026-11-17 | MVP-06 | Desvinculación unilateral y solicitud de eliminación verificadas en Android emulado. Suite SQL, carrera de revocación y trabajador con reintento aprobados localmente. | Desplegar el trabajador, validar Auth Admin real y confirmar retención y operación de lanzamiento. |
 
 ## Documentos de referencia
 

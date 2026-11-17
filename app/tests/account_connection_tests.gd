@@ -170,6 +170,10 @@ func _real_ui_tests() -> void:
 	await service.completed
 	check(app.screen == "error" and app.first_open.error == "pair_unavailable", "El rechazo del vínculo impide abrir el selector")
 	check(service.sent[-1] == {"path": "/rest/v1/rpc/get_pair_state", "body": {"pair_id": "real-pair"}, "authenticated": true}, "La entrada consulta el vínculo con la sesión autenticada")
+	check(not app.first_open.state.has_pair() and app.first_open.selection_view.is_empty(),
+		"El vínculo revocado se retira también de la memoria del cliente")
+	# La siguiente respuesta controlada corresponde a otro vínculo activo autorizado.
+	app.first_open.state.pair = {"id": "real-pair", "status": "confirmed", "demo": false}
 	service.responses.append({"ok": true, "data": {"ok": true, "phase": "private", "pair_revision": 0.0, "catalog_version": 2.0}})
 	app.first_open.retry()
 	await service.completed
