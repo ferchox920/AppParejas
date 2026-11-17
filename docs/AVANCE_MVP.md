@@ -208,11 +208,10 @@ Cierre del MVP: todos los criterios anteriores cuentan con evidencia; los errore
 
 | Prioridad | Próximo bloque | Resultado esperado |
 | --- | --- | --- |
-| 1 | Consolidar el seguimiento y automatizar pruebas | Ejecutar los tres checks en un PR y exigirlos en `main` cuando pasen en GitHub. |
-| 2 | Completar accesibilidad Android | Verificar TalkBack y texto al 200 % en el recorrido bilateral en dispositivo físico. Ratificar motor y renderizador con la evidencia. |
-| 3 | Cerrar respaldo y restauración | Elegir destino, acceso y conservación. Ensayar la recuperación de una copia equivalente al entorno alojado y comprobar que se respeten bajas y desvinculaciones posteriores. |
-| 4 | Medir el APK de un solo cliente | Registrar memoria, batería, fluidez y temperatura sin USB. Comparar el jardín con renderizado bajo demanda si se prueba ese cambio. |
-| 5 | Ejecutar el piloto Android | Preparar la compilación firmada y probar el recorrido con dos participantes y datos ficticios. |
+| 1 | Completar accesibilidad Android | Verificar TalkBack y texto al 200 % en el recorrido bilateral en dispositivo físico. Ratificar motor y renderizador con la evidencia. |
+| 2 | Cerrar respaldo y restauración | Elegir destino, acceso y conservación. Ensayar la recuperación de una copia equivalente al entorno alojado y comprobar que se respeten bajas y desvinculaciones posteriores. |
+| 3 | Medir el APK de un solo cliente | Registrar memoria, batería, fluidez y temperatura sin USB. Comparar el jardín con renderizado bajo demanda si se prueba ese cambio. |
+| 4 | Ejecutar el piloto Android | Preparar la compilación firmada y probar el recorrido con dos participantes y datos ficticios. |
 
 La recuperación con la cuenta principal histórica sigue en MVP-02. El código manual permite probar el vínculo. QR nativo y enlaces públicos quedan por definir para el alcance del piloto.
 
@@ -228,7 +227,7 @@ El [workflow AppParejas CI](../.github/workflows/pull-request.yml) corre en cada
 
 En Linux, `bash tools/Install-Godot-Linux.sh .tools/godot-ci` descarga y verifica el mismo binario que usa CI. Pasar la ruta que imprime al script de cliente. Para la integración también puede usarse esa ruta mediante `APPPAREJAS_GODOT`. El check SQL requiere Docker y Python. Usa el esquema Auth mínimo de `backend/tests/bootstrap.sql` para probar los contratos de la base. La integración requiere además Godot, OpenSSL y Python con `venv`. En Windows, `./tools/Test-Backend.ps1` conserva la instancia local aislada y ejecuta las mismas suites con PostgreSQL 17 y Python.
 
-Una vez que los tres checks aparezcan en verde en un PR de GitHub, configurar una regla para `main` que exija un pull request y los tres checks de la tabla antes de fusionar. Seleccionar GitHub Actions como origen de los checks cuando la opción esté disponible. Confirmar en el siguiente PR que GitHub bloquea el merge mientras haya checks pendientes o fallidos. La primera ejecución en GitHub y la aplicación de la regla quedan pendientes.
+Los tres checks pasaron en la [primera ejecución de GitHub Actions](https://github.com/ferchox920/AppParejas/actions/runs/44200708407), iniciada por el [PR #1](https://github.com/ferchox920/AppParejas/pull/1). La [regla de `main`](https://github.com/ferchox920/AppParejas/rules/27506169) exige un pull request y los resultados aprobados de GitHub Actions para esos tres checks. Si cambia el nombre de un check, actualizar también la regla.
 
 ## Cómo mantener este documento
 
@@ -261,7 +260,7 @@ Para iniciar un bloque, tomar la primera prioridad pendiente, consultar su contr
 | 2026-11-17 | MVP-06 alojado | Migraciones de salida y retención aplicadas. Edge Function con ejecución por minuto, borrado real de Auth y limpieza de QA verificados. Retención de treinta días y Gmail acordados. | Seleccionar cobertura de respaldo antes del piloto. |
 | 2026-11-17 | MVP-07 | Recorrido de dos cuentas sintéticas hasta brote y salida, rechazo a una tercera, medición inicial y restauración local. | OTP, TalkBack, rendimiento en dispositivo objetivo, sesiones con participantes y respaldo alojado. |
 | 2026-11-17 | MVP-07 en S25 Ultra | 15 comprobaciones físicas, diez minutos de jardín, OTP de Gmail en emulador, privacidad y reconciliación de una restauración sintética. | Completar TalkBack, validar memoria con APK de un solo cliente, respaldar el piloto y hacer las sesiones con participantes. |
-| 2026-11-17 | Consolidación | CI preparada con tres checks. Pasaron localmente 1.891 verificaciones de Godot, 9 migraciones, 8 suites SQL, las carreras de aceptación y la integración bilateral. | Primera ejecución en GitHub y checks obligatorios en `main`. |
+| 2026-11-17 | Consolidación | Pasaron localmente 1.891 verificaciones de Godot, 9 migraciones, 8 suites SQL, las carreras de aceptación y la integración bilateral. Los tres checks pasaron también en GitHub y quedaron obligatorios en `main`. | Validar TalkBack en Android físico. |
 
 ## Documentos de referencia
 
