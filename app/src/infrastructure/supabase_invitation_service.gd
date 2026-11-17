@@ -230,7 +230,8 @@ func _send(path: String, body: Dictionary, authenticated: bool, logout_token: St
 	if _http == http: _http = null
 	if generation != _generation: return {"ok": false, "error": "cancelled"}
 	if response[0] != HTTPRequest.RESULT_SUCCESS: return {"ok": false, "error": "offline"}
-	var data: Variant = JSON.parse_string((response[3] as PackedByteArray).get_string_from_utf8())
+	var response_body: PackedByteArray = response[3]
+	var data: Variant = {} if response_body.is_empty() else JSON.parse_string(response_body.get_string_from_utf8())
 	var status: int = response[1]
 	if status < 200 or status >= 300:
 		if status == 429: return {"ok": false, "error": "rate_limited"}
