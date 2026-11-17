@@ -1,6 +1,6 @@
 # Avance general de AppParejas
 
-Última actualización: **6 de noviembre de 2026**. Última evidencia de ejecución: **6 de noviembre de 2026**.
+Última actualización: **17 de noviembre de 2026**. Última evidencia de ejecución: **17 de noviembre de 2026**.
 
 Este es el documento principal para decidir qué desarrollar, revisar los objetivos cumplidos y registrar el avance del MVP. Las guías técnicas vinculadas conservan los detalles y las pruebas. Actualizar este documento al terminar cada bloque de trabajo.
 
@@ -14,13 +14,11 @@ Android es la plataforma en desarrollo y verificación, con Samsung y computador
 
 ## Dónde estamos
 
-La aplicación Android tiene acceso por código de correo, vínculo bilateral, selección privada y revelación con Supabase de desarrollo. El acuerdo, la siembra y el primer brote se validaron en el emulador contra Supabase de desarrollo.
+El flujo de acceso, vínculo, selección privada, acuerdo, siembra, primer brote y salida se validó con cuentas sintéticas en Supabase de desarrollo. El ensayo de MVP-07 completó 15 comprobaciones en el Galaxy S25 Ultra. La sesión cifrada con Keystore se recuperó en el emulador. Queda pendiente repetir el reingreso con la cuenta principal histórica.
 
-La sesión segura de Android se probó en el emulador contra Supabase de desarrollo con cuentas sintéticas. Queda por repetir la recuperación con la cuenta principal del registro histórico.
+El jardín sostuvo diez minutos con p95 de 8,80 ms y sin cierres en el S25 Ultra. La compilación cargaba dos sesiones y el teléfono estaba conectado por USB. Queda medir memoria y consumo con el APK de un cliente. La rama principal usa Godot 4.7.2 y mantiene abierto el criterio de TalkBack. Godot 4.8 beta 3 expuso controles del acceso y la invitación en emulador. [Evidencia del piloto](MVP_07.md)
 
-El refinamiento autónomo del 4 de octubre corrigió recuperación de errores, respuestas tardías, asociación de códigos de invitación, validación de sesión y conservación del formulario/texto aumentado. Pasaron 1347 pruebas de código y 33 comprobaciones del recorrido visual en escritorio. Android emulado conserva cuatro fallos visuales; el Samsung estaba bloqueado. Ver [autoexploración](AUTOEXPLORACION.md). Estos resultados no cierran la validación móvil ni el acceso real tras reabrir.
-
-Después del desbloqueo se repitió la exploración en Samsung: 33 comprobaciones sin fallos y sin errores gráficos en el registro. Se corrigió el ancho de los controles del jardín al 200%; las pruebas de código actuales suman **1349 sin fallos**. El gesto desde el jardín demo mantiene la app abierta y el toque muestra el brote. Los pendientes del vínculo real y TalkBack se conservan.
+La eliminación de cuentas y la retención están activas en desarrollo. Los ensayos de restauración aislada conservaron bloqueadas cuentas eliminadas y vínculos revocados tras reaplicar las bajas. Falta decidir la cobertura de respaldo para el piloto y ensayar con una copia equivalente al entorno alojado. [Evidencia de eliminación](MVP_06.md) · [Ensayo de recuperación](MVP_07.md#recuperación-y-respaldo)
 
 No asignamos un porcentaje global: un catálogo o jardín de demostración no demuestra que el mismo recorrido funcione entre dos cuentas. El avance se mide por criterios de aceptación cumplidos y evidencia.
 
@@ -30,6 +28,7 @@ No asignamos un porcentaje global: un catálogo o jardín de demostración no de
 | --- | --- |
 | Pendiente | No hay implementación funcional del objetivo real. |
 | En desarrollo | Hay una implementación parcial o una alternativa en evaluación. |
+| Validado en desarrollo | El objetivo tiene evidencia en un entorno de desarrollo. El piloto y la publicación tienen criterios propios. |
 | Por validar | La implementación existe; faltan pruebas necesarias para cerrar. |
 | Cumplido | Todos los criterios de aceptación tienen evidencia verificable. |
 
@@ -42,13 +41,13 @@ Estos identificadores son propios del seguimiento. Los puntos «1 y 2» de nuest
 | ID | Objetivo | Estado | Resultado disponible / falta principal |
 | --- | --- | --- | --- |
 | MVP-00 | Base reproducible del proyecto | Cumplido | Motor fijado, estructura, exportación Android y verificaciones reproducibles. |
-| MVP-01 | Validación móvil y decisión del motor | En desarrollo | APK, HTTPS, teclado y navegación comprobados parcialmente. TalkBack sigue sin exponer los controles de la versión principal en el emulador. El gesto autenticado pasó con una cuenta sintética en el emulador. Faltan mediciones y accesibilidad completa. |
+| MVP-01 | Validación móvil y decisión del motor | En desarrollo | APK, HTTPS, teclado y navegación comprobados parcialmente. TalkBack sigue sin exponer los controles de la versión principal en el emulador. El gesto autenticado pasó con una cuenta sintética en el emulador. Hay una medición sostenida en S25 Ultra. Faltan mediciones del APK de un solo cliente y accesibilidad completa. |
 | MVP-02 | Cuentas y vínculo bilateral real | Por validar | Vínculo confirmado históricamente. Sesión segura verificada con datos de prueba en el emulador. Reapertura y sesión verificadas contra el servicio alojado con cuentas sintéticas. La cuenta principal histórica queda pendiente. |
 | MVP-03 | Selección privada y revelación bilateral | Validado en desarrollo | 9 de 9 casos aprobados en Android emulado con backend local. El borrador, la espera, la revelación y la reapertura también se verificaron previamente contra Supabase de desarrollo. |
 | MVP-04 | Acuerdo y receta compartida | Validado en Supabase de desarrollo | Dos cuentas en Android emulado recuperaron la misma receta, editaron el acuerdo y aprobaron la versión vigente. |
 | MVP-05 | Siembra única y primer brote | Validado en Supabase de desarrollo | Android emulado confirmó la siembra bilateral, recuperó un solo cultivo y registró un solo brote con presentación por persona. |
 | MVP-06 | Salida, eliminación y recuperación | Validado en Supabase de desarrollo | Desvinculación y eliminación real en Auth verificadas en Android emulado. Trabajador y retención activos. Respaldo del piloto por definir. |
-| MVP-07 | Piloto del recorrido completo | En validación | Recorrido sintético y p95 del jardín verificados en S25 Ultra. OTP de Gmail verificado en emulador. Pendientes TalkBack completo, memoria del APK de un solo cliente, sesiones con participantes y respaldo. |
+| MVP-07 | Piloto del recorrido completo | En validación | Recorrido sintético y p95 del jardín verificados en S25 Ultra. OTP de Gmail verificado en emulador. Pendientes TalkBack completo, memoria y batería del APK de un solo cliente, respaldo, compilación firmada y sesiones con participantes. |
 
 ### MVP-00 · Base reproducible
 
@@ -71,10 +70,11 @@ Evidencia: [README](../README.md), [Android](ANDROID.md), [decisiones iniciales]
 - [x] Comprobar el gesto desde un vínculo confirmado en Supabase con una cuenta sintética en el emulador. La comprobación física queda diferida.
 - [ ] Validar TalkBack en todo el recorrido destinado al MVP: lectura, foco, campos, errores, desplazamiento y acciones.
 - [ ] Verificar texto al 200% en el dispositivo y conservar todas las acciones accesibles.
-- [ ] Medir rendimiento sostenido del jardín y comparar renderizadores según el presupuesto del plan técnico.
+- [x] Medir rendimiento sostenido del jardín en el S25 Ultra con Compatibility.
+- [ ] Repetir con un solo cliente, medir consumo y comparar renderizadores según el presupuesto del plan técnico.
 - [ ] Ratificar la versión del motor y el renderizador con esos resultados.
 
-TalkBack expone controles y permite escribir en una copia con Godot 4.8 dev 7. La copia pasó las 1325 comprobaciones existentes. **La app principal sigue en 4.7.2, donde TalkBack no expone sus controles.** La versión preliminar no se adopta sólo por esa prueba parcial. La copia se desinstaló del teléfono al terminar; el APK de prueba se conserva localmente.
+TalkBack expone controles y permite escribir en una copia con Godot 4.8 dev 7. La copia pasó las 1325 comprobaciones existentes. **La app principal sigue en 4.7.2, donde TalkBack no expone sus controles.** La copia se desinstaló del teléfono al terminar y el APK se conserva localmente. El 17 de noviembre, 4.8 beta 3 expuso en el emulador los controles del acceso, el error de OTP y la invitación. Queda validar el recorrido bilateral completo con TalkBack en un teléfono y comparar regresiones antes de decidir la versión del motor.
 
 Evidencia: [validación de cuentas y teléfono](CUENTAS_Y_VALIDACION.md), [prueba de accesibilidad](ACCESIBILIDAD_ANDROID.md) y capturas/registros locales allí identificados.
 
@@ -192,8 +192,10 @@ La validación local aprobó seis casos en el emulador Android. El servidor veri
 
 El [ensayo de MVP-07](MVP_07.md) registra las comprobaciones del 17 de noviembre y los criterios que quedan por validar.
 
-- [ ] Completar el recorrido real desde acceso hasta primer brote y salida.
-- [ ] Comprobar privacidad con una tercera cuenta y todas las vías de lectura expuestas.
+- [x] Ensayar el recorrido hasta primer brote y salida con dos cuentas sintéticas en Supabase de desarrollo.
+- [x] Confirmar en desarrollo el rechazo de una tercera cuenta, de llamadas anónimas y de las lecturas directas comprobadas.
+- [x] Verificar recepción de un OTP por Gmail y reapertura de la sesión en el emulador.
+- [ ] Repetir el recorrido en la compilación firmada con participantes e incluir las comprobaciones de privacidad del entorno del piloto.
 - [ ] Cumplir accesibilidad, texto aumentado, áreas táctiles y movimiento reducido.
 - [ ] Verificar memoria y consumo con el APK de un solo cliente. El S25 Ultra ya completó diez minutos de jardín con p95 de 8,80 ms y sin cierres.
 - [ ] Revisar comprensión del consentimiento, espera, aprobación, siembra y salida con personas de prueba.
@@ -206,14 +208,26 @@ Cierre del MVP: todos los criterios anteriores cuentan con evidencia; los errore
 
 | Prioridad | Próximo bloque | Resultado esperado |
 | --- | --- | --- |
-| 1 | Reingreso en emulador y gesto desde confirmación | Recuperar el vínculo existente sin crear otra invitación; la app permanece abierta. |
-| 2 | Sesión segura y cierre de validación móvil | Reapertura, TalkBack completo y decisión del motor respaldados por pruebas. |
-| 3 | Casos negativos del vínculo real | Tercera cuenta, cancelación, vencimiento y reconexión verificados. |
-| 4 | MVP-03 | Primera selección privada y revelación bilateral reales. |
-| 5 | MVP-04 → MVP-05 | Acuerdo aprobado, siembra única y primer brote. |
-| 6 | MVP-06 → MVP-07 | Salida segura y piloto completo. |
+| 1 | Completar accesibilidad Android | Verificar TalkBack y texto al 200 % en el recorrido bilateral en dispositivo físico. Ratificar motor y renderizador con la evidencia. |
+| 2 | Cerrar respaldo y restauración | Elegir destino, acceso y conservación. Ensayar la recuperación de una copia equivalente al entorno alojado y comprobar que se respeten bajas y desvinculaciones posteriores. |
+| 3 | Medir el APK de un solo cliente | Registrar memoria, batería, fluidez y temperatura sin USB. Comparar el jardín con renderizado bajo demanda si se prueba ese cambio. |
+| 4 | Ejecutar el piloto Android | Preparar la compilación firmada y probar el recorrido con dos participantes y datos ficticios. |
 
-La preparación de contratos o diseños puede avanzar en paralelo a una validación pendiente, pero no se marca cumplido el objetivo dependiente sin su evidencia. QR nativo y enlaces públicos continúan pendientes: el código manual permite probar el vínculo; incorporar esos medios antes del piloto si se mantienen en su alcance.
+La recuperación con la cuenta principal histórica sigue en MVP-02. El código manual permite probar el vínculo. QR nativo y enlaces públicos quedan por definir para el alcance del piloto.
+
+### Checks obligatorios de GitHub
+
+El [workflow AppParejas CI](../.github/workflows/pull-request.yml) corre en cada PR hacia `main`. Los tres jobs se ejecutan en un runner Linux sin credenciales del entorno alojado.
+
+| Nombre del check | Cobertura | Comando local |
+| --- | --- | --- |
+| Cliente Godot | Importación, dominio, primera apertura y cuentas con la versión fijada en `tools/toolchain.json`. | `pwsh -NoProfile -File tools/Test-AppParejas.ps1 -GodotPath /ruta/a/godot` |
+| Migraciones y suites SQL | Aplica todas las migraciones en orden sobre PostgreSQL 17 descartable y ejecuta cada suite SQL y las dos carreras de aceptación. | `python3 tools/Test-Backend.py` |
+| Integración bilateral | Dos cuentas y OTP con Auth local, invitación por QR, aceptación y consulta del mismo vínculo vía PostgREST. | `python3 tools/Test-Connection.py` |
+
+En Linux, `bash tools/Install-Godot-Linux.sh .tools/godot-ci` descarga y verifica el mismo binario que usa CI. Pasar la ruta que imprime al script de cliente. Para la integración también puede usarse esa ruta mediante `APPPAREJAS_GODOT`. El check SQL requiere Docker y Python. Usa el esquema Auth mínimo de `backend/tests/bootstrap.sql` para probar los contratos de la base. La integración requiere además Godot, OpenSSL y Python con `venv`. En Windows, `./tools/Test-Backend.ps1` conserva la instancia local aislada y ejecuta las mismas suites con PostgreSQL 17 y Python.
+
+Los tres checks pasaron en la [primera ejecución de GitHub Actions](https://github.com/ferchox920/AppParejas/actions/runs/44200708407), iniciada por el [PR #1](https://github.com/ferchox920/AppParejas/pull/1). La [regla de `main`](https://github.com/ferchox920/AppParejas/rules/27506169) exige un pull request y los resultados aprobados de GitHub Actions para esos tres checks. Si cambia el nombre de un check, actualizar también la regla.
 
 ## Cómo mantener este documento
 
@@ -246,6 +260,7 @@ Para iniciar un bloque, tomar la primera prioridad pendiente, consultar su contr
 | 2026-11-17 | MVP-06 alojado | Migraciones de salida y retención aplicadas. Edge Function con ejecución por minuto, borrado real de Auth y limpieza de QA verificados. Retención de treinta días y Gmail acordados. | Seleccionar cobertura de respaldo antes del piloto. |
 | 2026-11-17 | MVP-07 | Recorrido de dos cuentas sintéticas hasta brote y salida, rechazo a una tercera, medición inicial y restauración local. | OTP, TalkBack, rendimiento en dispositivo objetivo, sesiones con participantes y respaldo alojado. |
 | 2026-11-17 | MVP-07 en S25 Ultra | 15 comprobaciones físicas, diez minutos de jardín, OTP de Gmail en emulador, privacidad y reconciliación de una restauración sintética. | Completar TalkBack, validar memoria con APK de un solo cliente, respaldar el piloto y hacer las sesiones con participantes. |
+| 2026-11-17 | Consolidación | Pasaron localmente 1.891 verificaciones de Godot, 9 migraciones, 8 suites SQL, las carreras de aceptación y la integración bilateral. Los tres checks pasaron también en GitHub y quedaron obligatorios en `main`. | Validar TalkBack en Android físico. |
 
 ## Documentos de referencia
 

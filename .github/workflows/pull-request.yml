@@ -1,0 +1,47 @@
+name: AppParejas CI
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  godot:
+    name: Cliente Godot
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Importar y probar el cliente
+        run: |
+          godot_path="$(bash tools/Install-Godot-Linux.sh "$RUNNER_TEMP/godot")"
+          pwsh -NoProfile -File tools/Test-AppParejas.ps1 -GodotPath "$godot_path"
+
+  sql:
+    name: Migraciones y suites SQL
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Aplicar migraciones y probar PostgreSQL 17
+        run: python3 tools/Test-Backend.py
+
+  bilateral:
+    name: Integración bilateral
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Probar dos cuentas con Auth y PostgREST locales
+        run: |
+          APPPAREJAS_GODOT="$(bash tools/Install-Godot-Linux.sh "$RUNNER_TEMP/godot")"
+          export APPPAREJAS_GODOT
+          python3 tools/Test-Connection.py
