@@ -1,6 +1,16 @@
 class_name FirstOpenView
 extends VBoxContainer
 
+class FormField extends LineEdit:
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_ACCESSIBILITY_UPDATE and editable:
+			var element := get_accessibility_element()
+			if element.is_valid():
+				AccessibilityServer.update_add_action(element, AccessibilityServer.ACTION_CLICK, _edit_from_reader)
+
+	func _edit_from_reader(_data: Variant) -> void:
+		edit()
+
 var flow: FirstOpenFlow
 var platform: PlatformCapabilities
 var text_scale: float = 1.0
@@ -148,10 +158,12 @@ func _account_access() -> void:
 		_card("Invitación pendiente", "Podrás revisarla después de entrar. Todavía no aceptaste el vínculo.")
 	_label("Tu nombre")
 	var name_field := _field("DisplayName", "Cómo querés aparecer", 30)
+	name_field.accessibility_name = "Tu nombre"
 	name_field.text = str(flow.access_draft.name)
 	name_field.text_changed.connect(func(value: String) -> void: flow.access_draft.name = value)
 	_label("Correo electrónico")
 	var email_field := _field("AccountEmail", "nombre@correo.com", 254)
+	email_field.accessibility_name = "Correo electrónico"
 	email_field.text = str(flow.access_draft.email)
 	email_field.text_changed.connect(func(value: String) -> void: flow.access_draft.email = value)
 	email_field.virtual_keyboard_type = LineEdit.KEYBOARD_TYPE_EMAIL_ADDRESS
@@ -211,6 +223,7 @@ func _join() -> void:
 	_label("Podés ingresar un PIN, escanear un QR o abrir un link recibido. Siempre revisarás quién invita antes de aceptar." if flow.is_demo() else "Pegá el código recibido. Siempre revisarás quién invita antes de aceptar.")
 	_label("PIN de invitación" if flow.is_demo() else "Código de invitación")
 	_pin = _field("InvitationPIN", "Ingresá el PIN" if flow.is_demo() else "Pegá el código de 32 caracteres", 6 if flow.is_demo() else 32)
+	_pin.accessibility_name = "PIN de invitación" if flow.is_demo() else "Código de invitación"
 	_pin.virtual_keyboard_type = LineEdit.KEYBOARD_TYPE_NUMBER if flow.is_demo() else LineEdit.KEYBOARD_TYPE_DEFAULT
 	_pin.text_submitted.connect(func(value: String) -> void: flow.receive_reference(value))
 	_button("Revisar PIN" if flow.is_demo() else "Revisar invitación", "ResolvePIN", func() -> void: flow.receive_reference(_pin.text))
@@ -524,7 +537,7 @@ func _share() -> void:
 	else: _status.text = "Elegí una app para compartir. La invitación sigue pendiente de aceptación."
 
 func _field(id: String, placeholder: String, length: int) -> LineEdit:
-	var field := LineEdit.new()
+	var field := FormField.new()
 	field.name = id
 	field.accessibility_name = placeholder
 	field.placeholder_text = placeholder

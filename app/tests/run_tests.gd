@@ -59,6 +59,18 @@ func _run() -> void:
 	app.show_screen("garden")
 	await process_frame
 	_check(is_instance_valid(app.garden), "Jardín instanciado")
+	_check(app.garden._viewport.render_target_update_mode == SubViewport.UPDATE_ONCE and not app.garden.is_processing(),
+		"El jardín con movimiento reducido solicita un solo cuadro")
+	app.garden.reduced_motion = false
+	_check(app.garden._viewport.render_target_update_mode == SubViewport.UPDATE_WHEN_VISIBLE and app.garden.is_processing(),
+		"El jardín visible permite el movimiento elegido")
+	app.garden.hide()
+	_check(app.garden._viewport.render_target_update_mode == SubViewport.UPDATE_DISABLED and not app.garden.is_processing(),
+		"El jardín oculto pausa renderizado y movimiento")
+	app.garden.reduced_motion = true
+	app.garden.show()
+	_check(app.garden._viewport.render_target_update_mode == SubViewport.UPDATE_ONCE and not app.garden.is_processing(),
+		"Volver a mostrar el jardín solicita otro cuadro estático")
 	app.set_stage("sprout")
 	_check(app.garden.stage == "sprout", "Etapa brote")
 	app.garden.turn(1000)

@@ -2,6 +2,22 @@
 
 Prueba del 2 de octubre de 2026 en Samsung SM-S936U1, Android 16. Godot 4.7.2, la versión principal, no expone los controles de la app a TalkBack. Se probó una copia aislada con Godot 4.8 dev 7, que incorporó [AccessKit para Android](https://godotengine.org/article/dev-snapshot-godot-4-8-dev-7/).
 
+## Validación del recorrido de MVP-07 en el emulador
+
+El 17 de noviembre de 2026 se probó una copia de la app con Godot 4.8 beta 3 y TalkBack activo en Android 15. La copia usa pantallas y acciones de la app con un servicio simulado y datos ficticios. El árbol de accesibilidad de Android expuso 50 etiquetas esperadas en 15 pantallas con texto al 200 %, después de desplazar las pantallas que lo requerían.
+
+Se comprobó que las acciones nativas de accesibilidad llegan al flujo para aceptar una invitación, aprobar el acuerdo, confirmar la siembra, marcar el brote como visto y confirmar una desvinculación. También se verificaron el foco de una cualidad, la escritura tras activar un campo con el lector, la acción Atrás de Android sin perder el formulario y la recuperación desde el error de código. Los campos de nombre, correo y de código de invitación ahora anuncian su propósito. La categoría activa de cualidades se expone como botón con estado.
+
+Las suites de dominio, primera apertura y cuentas pasaron en Godot 4.7.2 y 4.8 beta 3 con 1.891 verificaciones por motor. Los registros, los árboles nativos y el APK de la prueba quedan en `.artifacts/m7-talkback/`. La aprobación del motor y el cierre del criterio requieren leer y operar el recorrido bilateral real con TalkBack en un teléfono, incluido el orden de lectura y el teclado del dispositivo.
+
+## Recorrido bilateral con backend de desarrollo
+
+El 18 de noviembre de 2026, dos cuentas sintéticas recorrieron el vínculo con Godot 4.8 beta 3, TalkBack activo y texto al 200 % en Android 15 emulado. Una herramienta de prueba desplazó las pantallas y activó los controles mediante las acciones de accesibilidad de Android. La invitación y las sesiones iniciales se prepararon con el arnés. La prueba de entrega del OTP por Gmail queda registrada por separado en [MVP-07](MVP_07.md).
+
+Las acciones llegaron al backend real. Las elecciones permanecieron privadas hasta el segundo consentimiento, las dos cuentas aprobaron la misma versión, se generó un solo cultivo y ambas recuperaron el mismo brote. El visto se registró por persona. La desvinculación dejó cero integrantes activos y un jardín archivado. La fecha del brote se adelantó únicamente en el cultivo de prueba. El trabajador eliminó las dos cuentas y se verificó su ausencia en Auth y en los perfiles.
+
+La primera ejecución retomó el acuerdo desde la primera aprobación guardada. La repetición completó 30 acciones de accesibilidad desde la invitación hasta la siembra en una sola ejecución. La fase de brote y salida completó otras cuatro acciones. Los registros quedan en `.artifacts/m7-talkback-hosted/`. Sigue pendiente la prueba en el teléfono, incluida la escucha del recorrido completo y la decisión sobre qué versión de Godot usar en el piloto.
+
 ## Resultado observado
 
 - El árbol nativo muestra los textos y botones de bienvenida y conexión con sus nombres.

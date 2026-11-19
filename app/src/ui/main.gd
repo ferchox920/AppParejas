@@ -244,7 +244,7 @@ func _garden_screen() -> void:
 	motion.button_pressed = reduced_motion
 	motion.toggled.connect(func(enabled: bool) -> void:
 		reduced_motion = enabled
-		garden.set_reduced_motion(enabled)
+		garden.reduced_motion = enabled
 		first_open.save_preferences(text_scale, enabled)
 	)
 	_body.add_child(motion)
@@ -285,6 +285,8 @@ func _selection() -> void:
 			active_family = family_id
 			_render()
 		, tabs)
+		tab.toggle_mode = true
+		tab.set_pressed_no_signal(active_family == family_id)
 		tab.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		var text_width: float = theme.default_font.get_string_size(family["label"], HORIZONTAL_ALIGNMENT_LEFT, -1, roundi(16 * text_scale)).x
 		tab.custom_minimum_size.x = text_width + 32
