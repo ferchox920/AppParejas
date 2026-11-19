@@ -47,7 +47,7 @@ Estos identificadores son propios del seguimiento. Los puntos «1 y 2» de nuest
 | MVP-04 | Acuerdo y receta compartida | Validado en Supabase de desarrollo | Dos cuentas en Android emulado recuperaron la misma receta, editaron el acuerdo y aprobaron la versión vigente. |
 | MVP-05 | Siembra única y primer brote | Validado en Supabase de desarrollo | Android emulado confirmó la siembra bilateral, recuperó un solo cultivo y registró un solo brote con presentación por persona. |
 | MVP-06 | Salida, eliminación y recuperación | Validado en Supabase de desarrollo | Desvinculación y eliminación real en Auth verificadas en Android emulado. Trabajador y retención activos. Respaldo del piloto por definir. |
-| MVP-07 | Piloto del recorrido completo | En validación | Recorrido sintético y p95 del jardín verificados en S25 Ultra. OTP de Gmail verificado en emulador. Pendientes TalkBack completo, memoria y batería del APK de un solo cliente, respaldo, compilación firmada y sesiones con participantes. |
+| MVP-07 | Piloto del recorrido completo | En validación | Recorrido sintético y p95 del jardín verificados en S25 Ultra con una compilación de pruebas. Candidata de release firmada con clave de pruebas, con OTP de Gmail y reapertura verificados en emulador. Pendientes validación física de la candidata, respaldo, firma de distribución y sesiones con participantes. |
 
 ### MVP-00 · Base reproducible
 
@@ -190,11 +190,12 @@ La validación local aprobó seis casos en el emulador Android. El servidor veri
 
 ### MVP-07 · Piloto
 
-El [ensayo de MVP-07](MVP_07.md) registra las comprobaciones del 17 de noviembre y los criterios que quedan por validar.
+El [ensayo de MVP-07](MVP_07.md) registra las comprobaciones del 17 y 18 de noviembre y los criterios que quedan por validar.
 
 - [x] Ensayar el recorrido hasta primer brote y salida con dos cuentas sintéticas en Supabase de desarrollo.
 - [x] Confirmar en desarrollo el rechazo de una tercera cuenta, de llamadas anónimas y de las lecturas directas comprobadas.
 - [x] Verificar recepción de un OTP por Gmail y reapertura de la sesión en el emulador.
+- [x] Generar una candidata de release con firma de pruebas y comprobar en emulador que recupera la sesión al reinstalarse.
 - [ ] Repetir el recorrido en la compilación firmada con participantes e incluir las comprobaciones de privacidad del entorno del piloto.
 - [ ] Cumplir accesibilidad, texto aumentado, áreas táctiles y movimiento reducido.
 - [ ] Verificar memoria y consumo con el APK de un solo cliente. El S25 Ultra ya completó diez minutos de jardín con p95 de 8,80 ms y sin cierres.
@@ -209,8 +210,8 @@ Cierre del MVP: todos los criterios anteriores cuentan con evidencia; los errore
 | Prioridad | Próximo bloque | Resultado esperado |
 | --- | --- | --- |
 | 1 | Completar accesibilidad Android | Verificar TalkBack y texto al 200 % en el recorrido bilateral en dispositivo físico. Ratificar motor y renderizador con la evidencia. |
-| 2 | Cerrar respaldo y restauración | Elegir destino, acceso y conservación. Ensayar la recuperación de una copia equivalente al entorno alojado y comprobar que se respeten bajas y desvinculaciones posteriores. |
-| 3 | Medir el APK de un solo cliente | Registrar memoria, batería, fluidez y temperatura sin USB. Comparar el jardín con renderizado bajo demanda si se prueba ese cambio. |
+| 2 | Cerrar respaldo y restauración | Drive privado y restauración cifrada con las versiones de desarrollo verificados con datos ficticios. Generar la primera copia de desarrollo y comprobar la cobertura de bajas y desvinculaciones posteriores. |
+| 3 | Medir el APK de un solo cliente | Registrar memoria, batería, fluidez y temperatura sin USB. El emulador ya comparó ambos modos. Repetir la medición en el teléfono. |
 | 4 | Ejecutar el piloto Android | Preparar la compilación firmada y probar el recorrido con dos participantes y datos ficticios. |
 
 La recuperación con la cuenta principal histórica sigue en MVP-02. El código manual permite probar el vínculo. QR nativo y enlaces públicos quedan por definir para el alcance del piloto.
@@ -261,6 +262,9 @@ Para iniciar un bloque, tomar la primera prioridad pendiente, consultar su contr
 | 2026-11-17 | MVP-07 | Recorrido de dos cuentas sintéticas hasta brote y salida, rechazo a una tercera, medición inicial y restauración local. | OTP, TalkBack, rendimiento en dispositivo objetivo, sesiones con participantes y respaldo alojado. |
 | 2026-11-17 | MVP-07 en S25 Ultra | 15 comprobaciones físicas, diez minutos de jardín, OTP de Gmail en emulador, privacidad y reconciliación de una restauración sintética. | Completar TalkBack, validar memoria con APK de un solo cliente, respaldar el piloto y hacer las sesiones con participantes. |
 | 2026-11-17 | Consolidación | Pasaron localmente 1.891 verificaciones de Godot, 9 migraciones, 8 suites SQL, las carreras de aceptación y la integración bilateral. Los tres checks pasaron también en GitHub y quedaron obligatorios en `main`. | Validar TalkBack en Android físico. |
+| 2026-11-17 | TalkBack de MVP-07 | Cincuenta etiquetas y acciones de invitación, acuerdo, siembra, brote y salida comprobadas en un emulador con texto al 200 % y datos simulados. | Probar el recorrido bilateral con TalkBack en el teléfono y decidir la versión del motor. |
+| 2026-11-18 | TalkBack de MVP-07 alojado | Treinta acciones de accesibilidad hasta la siembra, más brote y desvinculación, con dos cuentas sintéticas en desarrollo y texto al 200 % en emulador. | Escucha y operación del recorrido en Android físico y decisión del motor. |
+| 2026-11-18 | Candidata Android de MVP-07 | APK release con firma local de pruebas. Código real de Gmail, recuperación de sesión al reinstalar y eliminación de cuenta verificados en el emulador. | Instalar esta candidata en el S25 Ultra y comprobar TalkBack, memoria, batería y temperatura. |
 
 ## Documentos de referencia
 

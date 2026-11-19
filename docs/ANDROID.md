@@ -1,6 +1,27 @@
 # Desarrollo Android
 
-Actualización: existe un APK de desarrollo conectado a Supabase con Internet habilitado. Consultar [cuentas y validación del MVP](CUENTAS_Y_VALIDACION.md) para las pruebas actuales de HTTPS, teclado, gestos y el pendiente de TalkBack. El resto de esta guía conserva los resultados de las primeras versiones locales.
+El [registro del piloto](MVP_07.md) contiene las pruebas del APK de desarrollo conectado a Supabase. Las secciones de vista previa conservan los resultados de las primeras versiones locales.
+
+## Compilar la candidata del piloto en Linux
+
+El preset `Android piloto` genera un APK de release para ARM64 y x86_64, con la etiqueta **AppParejas Piloto** y el identificador `org.appparejas.pilotcandidate`. Se instala junto a la vista previa y la demo. La candidata del 18 de noviembre se exportó con Godot 4.8 beta 3 y sus plantillas Android para probar AccessKit con TalkBack.
+
+Configurar Java y Android SDK en el editor de esa versión. Preparar `app/data/connection.local.json` con la URL HTTPS y la clave publicable del proyecto de desarrollo. El script verifica que la app lea esa configuración y que la URL coincida con `APPPAREJAS_PILOT_URL`. Si el entorno difiere, cancela la exportación.
+
+Exportar desde la raíz del repositorio con estas variables:
+
+- `APPPAREJAS_PILOT_URL` con la URL HTTPS esperada.
+- `GODOT_ANDROID_KEYSTORE_RELEASE_PATH` con la ruta absoluta del almacén de firma, `GODOT_ANDROID_KEYSTORE_RELEASE_USER` con su alias y `GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD` con su contraseña. Mantener el almacén y la contraseña fuera del repositorio. Para reinstalar sobre la misma app y conservar sus datos, usar la misma clave de firma.
+- `APPPAREJAS_GODOT` y `APPPAREJAS_APKSIGNER` si los binarios correspondientes tienen otro nombre o están fuera de `PATH`.
+
+```bash
+./tools/Build-AndroidPilot.sh
+adb devices -l
+serial='SERIAL_DEL_DISPOSITIVO'
+adb -s "$serial" install --no-incremental -r build/android/AppParejas-piloto-candidato.apk
+```
+
+El script verifica la firma antes de publicar el APK en `build/android/`. La candidata del emulador usa una clave local de pruebas y AppParejas-desarrollo. En el S25 Ultra, abrir **AppParejas Piloto** y comprobar que aparezca el aviso de entorno de desarrollo.
 
 Inicialización del 2 de octubre de 2026. Se conserva la elección de `DECISIONES_INIT.md`: Godot 4.7.2 estable, GDScript tipado y Compatibility. Supabase/PostgreSQL y Blender/GLB siguen previstos en la arquitectura; esta vista previa funciona con datos ficticios locales.
 

@@ -5,7 +5,14 @@ const BotanicalGarden = preload("res://src/ui/botanical_garden.gd")
 const BOTANICAL_MIN_DISTANCE := 2.80
 
 var stage: String = "seed"
-var reduced_motion: bool = true
+var reduced_motion: bool = true:
+	set(enabled):
+		if reduced_motion == enabled:
+			return
+		reduced_motion = enabled
+		if is_instance_valid(_plant):
+			_plant.rotation.y = 0
+			_refresh_rendering()
 var _recipe: Dictionary = {}
 var _viewport: SubViewport
 var _world: Node3D
@@ -26,8 +33,8 @@ func _ready() -> void:
 	_viewport.size = Vector2i(342, 280)
 	_viewport.own_world_3d = true
 	_viewport.msaa_3d = Viewport.MSAA_2X
-	_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(_viewport)
+	_viewport.size_changed.connect(_refresh_rendering)
 	_world = Node3D.new()
 	_viewport.add_child(_world)
 	_environment = Environment.new()
@@ -78,6 +85,7 @@ func show_recipe(recipe: Dictionary, next_stage: String = "seed") -> void:
 	stage = next_stage
 	if is_node_ready():
 		_rebuild()
+		_refresh_rendering()
 
 func turn(amount: float) -> void:
 	_yaw = clampf(_yaw + amount, -55.0, 55.0)
@@ -93,15 +101,26 @@ func reset_camera() -> void:
 	_distance = 3.0
 	_update_camera()
 
-func set_reduced_motion(enabled: bool) -> void:
-	reduced_motion = enabled
-	if is_instance_valid(_plant):
-		_plant.rotation.y = 0
+func _refresh_rendering() -> void:
+	if not is_instance_valid(_viewport):
+		return
+	var visible := is_visible_in_tree()
+	set_process(visible and not reduced_motion)
+	if not visible:
+		_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	elif reduced_motion:
+		_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+	else:
+		_viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_VISIBILITY_CHANGED or what == NOTIFICATION_APPLICATION_RESUMED:
+		# El contenedor nativo restablece el modo de renderizado al cambiar la visibilidad.
+		_refresh_rendering()
 
 func _process(delta: float) -> void:
-	if not reduced_motion and is_instance_valid(_plant):
-		_elapsed += delta
-		_plant.rotation.y = sin(_elapsed * 0.6) * 0.025
+	_elapsed += delta
+	_plant.rotation.y = sin(_elapsed * 0.6) * 0.025
 
 func _on_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and event.device != -1 and event.button_mask & MOUSE_BUTTON_MASK_LEFT:
@@ -121,6 +140,7 @@ func _update_camera() -> void:
 	var distance := maxf(_distance, BOTANICAL_MIN_DISTANCE) if _botanical else _distance
 	_camera.position = Vector3(sin(angle) * distance, 1.6, cos(angle) * distance)
 	_camera.look_at(Vector3(0, 0.55, 0), Vector3.UP)
+	_refresh_rendering()
 
 func _rebuild() -> void:
 	var botanical: bool = _recipe.get("asset_version") == RecipePreview.ASSET_VERSION
